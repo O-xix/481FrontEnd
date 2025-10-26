@@ -130,6 +130,41 @@ document.addEventListener('DOMContentLoaded', () => {
         dataView.innerHTML = '';
         summaryView.textContent = 'This is the data summary.'; 
         dataView.appendChild(summaryView);
+        dataView.innerHTML = ''; // Clear the main view
+
+        if (allData.length === 0) {
+            dataView.textContent = 'No data to summarize.';
+            return;
+        }
+
+        const table = document.createElement('table');
+        table.classList.add('summary-table'); // Use a different class for potentially different styling
+
+        // 1. Create Header Row
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // 2. Create Single Data Row with Unique Values
+        const tbody = document.createElement('tbody');
+        const summaryRow = document.createElement('tr');
+        headers.forEach(header => {
+            const uniqueValues = [...new Set(allData.map(item => item[header]).filter(value => value != null))];
+            const cell = document.createElement('td');
+            // Join the unique values into a single string for display
+            cell.textContent = uniqueValues.join(', ');
+            summaryRow.appendChild(cell);
+        });
+        tbody.appendChild(summaryRow);
+        table.appendChild(tbody);
+
+        dataView.appendChild(table);
     }
 
 
