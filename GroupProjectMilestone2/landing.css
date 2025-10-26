@@ -58,17 +58,17 @@ tbody tr:hover td.highlighted-column {
 }
 
 .trueCell {
-    background-color: green;
+    color: green;
 }
 
 .falseCell {
-    background-color: red;
+    color: red;
 }
 
 .dayCell {
-    background-color: yellow;
+    color: yellow;
 }
 
 .nightCell {
-    background-color: black;
+    color: rgb(16, 0, 165);
 }
