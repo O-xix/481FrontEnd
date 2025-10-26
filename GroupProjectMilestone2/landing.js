@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const valueInput = document.getElementById('value-input');
     const summaryBtn = document.getElementById('summary-btn');
     const summaryView = document.createElement('div');
+    valueInput.addEventListener('input', filterAndRender);
+    summaryBtn.addEventListener('click', displaySummary);
 
     if (!dataView || !columnNamesSelect || !valueInput || !summaryBtn || !summaryView) {
         console.error("Error: Missing one or more required DOM elements.");
