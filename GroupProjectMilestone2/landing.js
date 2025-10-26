@@ -1,18 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 1. Initial DOM Element Selection ---
     const dataView = document.querySelector('.data-view');
     const columnNamesSelect = document.getElementById('column-names');
     const valueInput = document.getElementById('value-input');
     const summaryBtn = document.getElementById('summary-btn');
     const inputLimit = document.getElementById('limitColumns');
     
-    // Summary view creation should be outside the check, but its use needs fixing later.
     const summaryView = document.createElement('div'); 
 
     // Find and check button elements
     const showAllButton = document.querySelector('#show-all-input button');
     const sortByButton = document.querySelector('#sort-by-input button');
-    const sortByDropDown = document.querySelector('#sort-by-input input'); // Assuming this is a select, NOT an input
+    const sortByDropDown = document.querySelector('#sort-by-input input');
 
     // General element check
     if (!dataView || !columnNamesSelect || !valueInput || !summaryBtn || !inputLimit || !showAllButton || !sortByButton || !sortByDropDown) {
@@ -20,11 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // --- 2. State Variables (Single Source of Truth) ---
     let allData = [];
     let headers = [];
 
-    // --- 3. Table Rendering Function (Consolidated) ---
     function renderTable(dataToDisplay, colLimit = null) {
         dataView.innerHTML = ''; // Clear previous content
 
@@ -68,9 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
         dataView.appendChild(table);
     }
     
-    // --- 4. Filtering and Sorting Logic ---
+    // Filtering and Sorting Logic ---
     function filterAndRender() {
-        // Use the same function name as the event listener expects
         const filterValue = valueInput.value.toLowerCase().trim();
         const selectedColumn = columnNamesSelect.value;
         let dataToRender = allData;
@@ -98,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ? allData.filter(item => String(item[currentSelectedColumn] ?? '').toLowerCase().includes(currentFilterValue)) 
             : allData;
 
-        const sortedData = [...dataToSort]; // Copy the filtered/all data
+        const sortedData = [...dataToSort]; 
 
         sortedData.sort((a, b) => {
             const aVal = a[columnName];
@@ -125,15 +120,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function displaySummary() {
-        // Placeholder for your summary logic. 
-        // Note: The summaryView element was created but never added to the DOM.
         dataView.innerHTML = '';
         summaryView.textContent = 'This is the data summary.'; 
         dataView.appendChild(summaryView);
+        dataView.innerHTML = ''; // Clear the main view
+
+        if (allData.length === 0) {
+            dataView.textContent = 'No data to summarize.';
+            return;
+        }
+
+        const table = document.createElement('table');
+        table.classList.add('summary-table');
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        const summaryRow = document.createElement('tr');
+        headers.forEach(header => {
+            const uniqueValues = [...new Set(allData.map(item => item[header]).filter(value => value != null))];
+            const cell = document.createElement('td');
+            // Join the unique values into a single string for display
+            cell.textContent = uniqueValues.join(', ');
+            summaryRow.appendChild(cell);
+        });
+        tbody.appendChild(summaryRow);
+        table.appendChild(tbody);
+
+        dataView.appendChild(table);
     }
 
 
-    // --- 5. Data Fetching and Initialization ---
     fetch('data.json')
         .then(response => {
             if (!response.ok) {
@@ -168,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Initial render of the full table
             renderTable(allData);
 
-            // --- 6. Attach Event Listeners (AFTER data is loaded) ---
             valueInput.addEventListener('input', filterAndRender);
             columnNamesSelect.addEventListener('change', filterAndRender);
             summaryBtn.addEventListener('click', displaySummary);

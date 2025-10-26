@@ -18,7 +18,7 @@ body {
     color: #333;
 }
 
-.data-table thead th {
+thead th {
     background-color: #007bff; 
     color: white; 
     padding: 12px 15px;
@@ -31,12 +31,12 @@ body {
     top: 0;
 }
 
-.data-table tbody td {
+tbody td {
     padding: 10px 15px;
     border-bottom: 1px solid #ddd; /* Light separator lines */
     font-size: 14px;
 }
 
-.data-table tbody tr:nth-child(even) {
+tbody tr:nth-child(even) {
     background-color: #f9f9f9; /* Zebra striping for readability */
 }
