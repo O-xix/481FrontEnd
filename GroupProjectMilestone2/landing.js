@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     inputLimit.addEventListener('input', () => {
         if (!jsonData) return;
         const totalColumns = Object.keys(jsonData[0]).length;
-        const value = parseInt(inputLimit.value, totalColumns);
+        const value = parseInt(inputLimit.value, 10);
         if (!isNaN(value) && value >= 0 && value <= totalColumns) {
             buildTable(jsonData, value);
         } else if (inputLimit.value === '') {
