@@ -1,7 +1,7 @@
 let dataView, jsonData;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const dataView = document.querySelector('.data-view');
+    dataView = document.querySelector('.data-view');
     const columnNamesSelect = document.getElementById('column-names');
     const valueInput = document.getElementById('value-input');
     const summaryBtn = document.getElementById('summary-btn');
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * The dataView dom element must also be fetched.
      * @param {Object} data - Table rows to display.
      */
-    function buildTable(data, rowLimit = data.length){
+    function buildTable(data, colLimit = 46){
         // Check if data is null, undefined, or an empty array
         if (!data || !dataView || !Array.isArray(data) || data.length === 0) {
             dataView.textContent = 'No data to display.';
@@ -202,9 +202,14 @@ document.addEventListener('DOMContentLoaded', () => {
         table = document.createElement('table');
         table.classList.add('data-table');
 
+        // Get headers from the first object
+        headers = Object.keys(data[0]);
+
         // Get headers from the first object, assuming uniform structure
-        headers = Object.keys(data[0]); 
-        
+        if (colLimit !== null && colLimit >= 0 && colLimit <= headers.length) {
+            headers = headers.slice(0, colLimit);
+        }
+
         // Table headers
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
@@ -219,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // table body
         tbody = document.createElement('tbody');
-        data.slice(0, rowLimit).forEach(item => {
+        data.forEach(item => {
             const row = document.createElement('tr');
             headers.forEach(header => {
                 const cell = document.createElement('td');
@@ -237,13 +242,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
      // listen for changes
     inputLimit.addEventListener('input', () => {
-        if (!data) return;
+        if (!jsonData) return;
+        const totalColumns = Object.keys(jsonData[0]).length;
         const value = parseInt(inputLimit.value, 10);
-        if (!isNaN(value) && value >= 0 && value <= data.length) {
-            buildTable(data, value);
+        if (!isNaN(value) && value >= 0 && value <= totalColumns) {
+            buildTable(jsonData, value);
         } else if (inputLimit.value === '') {
             // if cleared input rebuild
-            buildTable(data);
+            buildTable(jsonData);
         }
     });
 });
