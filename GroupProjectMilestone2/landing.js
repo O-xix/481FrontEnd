@@ -1,7 +1,7 @@
 let dataView, jsonData;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const dataView = document.querySelector('.data-view');
+    dataView = document.querySelector('.data-view');
     const inputLimit = document.getElementById('limitColumns');
     let table, tbody, headers, data;
     // Check if the target element exists before attempting fetch
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * The dataView dom element must also be fetched.
      * @param {Object} data - Table rows to display.
      */
-    function buildTable(data, rowLimit = data.length){
+    function buildTable(data, colLimit = data.length){
         // Check if data is null, undefined, or an empty array
         if (!data || !dataView || !Array.isArray(data) || data.length === 0) {
             dataView.textContent = 'No data to display.';
@@ -97,8 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
         table.classList.add('data-table');
 
         // Get headers from the first object, assuming uniform structure
-        headers = Object.keys(data[0]); 
-        
+        if (colLimit !== null && colLimit >= 0 && colLimit <= headers.length) {
+            headers = headers.slice(0, colLimit);
+        }
+
         // Table headers
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
@@ -113,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // table body
         tbody = document.createElement('tbody');
-        data.slice(0, rowLimit).forEach(item => {
+        data.forEach(item => {
             const row = document.createElement('tr');
             headers.forEach(header => {
                 const cell = document.createElement('td');
