@@ -9,38 +9,52 @@
 
     <body>
         <script src="landing.js" defer></script>
-        <div class="container">
+        <header id="header-container">
             <h1>Milestone 2 - Project Dashboard</h1>
+            <em>By Aaron Quashnock, Simon Little, Teja Desari</em>
             <p>This dashboard provides various views of sample hardcoded data that will be supplemented with the full data later.</p>
-        </div>
+        </header>
 
-        <div id="button-container">
+        <main id="view-container">
             <div>
+                <h2>Show All</h2>
+                <p>Show all of the available data in the table.</p>
                 <button id="show-all-btn">Show All</button>
+                <div class="data-view" id="show-all-data-view"></div>
             </div>
             <div>
+                <h2>Filter</h2>
+                <p>Filters table rows to only include those with a specified value in a specified value.</p>
                 <label for="filter-column-names">Filter:</label>
                 <select name="column-names" id="filter-column-names"></select>
                 =
                 <input type="text" placeholder="Value" id="value-input">
+                <div class="data-view" id="filter-data-view"></div>
             </div>
             <div>
+                <h2>Sort</h2>
+                <p>Sort the order of the rows based on the values within a column. This is done lexicographically for string values and numerically for numbers.</p>
                 <label for="sort-by-column-names">Sort By:</label>
                 <select name="column-names" id="sort-by-column-names"></select>
                 <select id="sort-direction" name="sort-direction">
                     <option value="asc">Ascending</option>
                     <option value="desc">Descending</option>
                 </select>
+                <div class="data-view" id="sort-data-view"></div>
             </div>
             <div>
+                <h2>Limit Viewable Columns</h2>
+                <p> Limit the total number of columns shown in the table.</p>
                 <label for="limit-column-input">Limit Viewable Columns:</label>
                 <input type="number" id="limit-column-input" name="limit-column-input" min="0"> <br>
+                <div class="data-view" id="limit-data-view"></div>
             </div>
             <div>
+                <h2>Summary</h2>
+                <p>Displays a list of all unique values in each column.</p>
                 <button id="summary-btn">Show Summary</button>
+                <div class="data-view" id="summary-data-view"></div>
             </div>
-        </div>
-
-        <div id="data-view"></div>
+        </main>
     </body>
 </html>

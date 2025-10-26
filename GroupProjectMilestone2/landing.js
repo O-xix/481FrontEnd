@@ -1,7 +1,83 @@
-// --- Get DOM Elements --- //
+// --- Establish Global Variables --- //
+let elements = {};
+let allData = [];
+let headers = [];
+let highlightedColumn = null;
+
+document.addEventListener('DOMContentLoaded', initializeApp);
+
+// --- Initialize App with DOM elements and JSON data --- //
+/**
+ * Initialize App with references to the DOM elements.
+ */
+function initializeApp() {
+    elements = getDOMElements();
+
+    // --- Fetch Data --- //
+    fetch('data.json')
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok: ' + response.statusText);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Data loaded successfully.');
+        allData = data;
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            dataView.textContent = 'No data to display.';
+            return;
+        }
+
+        // Source the column names for the filter and sort by dropdown menus.
+        headers = Object.keys(data[0]);
+        elements.filterColumnNamesSelect.innerHTML = '';
+        elements.sortByColumnNamesSelect.innerHTML = '';
+
+        headers.forEach(headerText => {
+            elements.filterColumnNamesSelect.appendChild(new Option(headerText, headerText));
+            elements.sortByColumnNamesSelect.appendChild(new Option(headerText, headerText));
+        });
+
+        // Initially render to all data views to show the complete dataset
+        renderTable(allData, elements.showAllDataView);
+        renderTable(allData, elements.filterDataView);
+        renderTable(allData, elements.sortDataView);
+        renderTable(allData, elements.limitDataView);
+        displaySummary();
+    })
+    .catch(error => {
+        console.error('Error loading or processing data:', error);
+        elements.dataView.textContent = `Error loading data: ${error.message}`;
+    });
+
+    // Set event listeners
+    elements.showAllButton.addEventListener('click', () => {
+        highlightedColumn = null;
+        renderTable(allData, elements.showAllDataView);
+    });
+
+    elements.filterValueInput.addEventListener('input', filterAndRender);
+    elements.filterColumnNamesSelect.addEventListener('change', filterAndRender);
+
+    elements.sortByColumnNamesSelect.addEventListener('change', sortAndRender);
+    elements.sortDirectionSelect.addEventListener('change', sortAndRender);
+
+    elements.inputLimit.addEventListener('input', renderLimitedTable);
+
+    elements.summaryBtn.addEventListener('click', displaySummary);
+}
+
+/**
+ * Retrieves all required elements from the DOM.
+ * @returns {Object} 
+ */
 function getDOMElements() {
     const elements = {
-        dataView: document.getElementById('data-view'),
+        dataView: document.querySelector('.data-view'),
+        showAllDataView: document.getElementById('show-all-data-view'),
+        filterDataView: document.getElementById('filter-data-view'),
+        sortDataView: document.getElementById('sort-data-view'),
+        limitDataView: document.getElementById('limit-data-view'),
+        summaryDataView: document.getElementById('summary-data-view'),
         filterColumnNamesSelect: document.getElementById('filter-column-names'),
         sortByColumnNamesSelect: document.getElementById('sort-by-column-names'),
         sortDirectionSelect: document.getElementById('sort-direction'),
@@ -12,89 +88,27 @@ function getDOMElements() {
         summaryView: document.createElement('div')
     };
 
-    for (const [elementName, element] of Object.entries(elements)){
+    for (const [elementName, element] of Object.entries(elements)) {
         if (element == null) {
-            const errorMessage = `Error: ${elementName} not found in DOM.`
-            console.log(errorMessage);
-            
-            if (elements.dataView) {
-                elements.dataView.textContent = errorMessage;
-            }
-        } 
+            console.log(`Error: ${elementName} cannot be found in the DOM.`);
+        }
     }
 
     return elements;
 }
 
-const elements = getDOMElements();
-const { dataView, filterColumnNamesSelect, sortByColumnNamesSelect, sortDirectionSelect, 
-        filterValueInput, summaryBtn, inputLimit, showAllButton, summaryView } = elements;
-
-// --- Application Data --- //
-let allData = [];
-let headers = [];
-let highlightedColumn = null;
-
-// --- Fetch Data --- //
-fetch('data.json')
-.then(response => {
-    if (!response.ok) throw new Error('Network response was not ok: ' + response.statusText);
-    return response.json();
-})
-.then(data => {
-    console.log('Data loaded successfully.');
-    allData = data;
-    if (!data || !Array.isArray(data) || data.length === 0) {
-        dataView.textContent = 'No data to display.';
-        return;
-    }
-
-    // Source the column names for the filter and sort by dropdown menus.
-    headers = Object.keys(data[0]);
-    filterColumnNamesSelect.innerHTML = '';
-    sortByColumnNamesSelect.innerHTML = '';
-
-    headers.forEach(headerText => {
-        filterColumnNamesSelect.appendChild(new Option(headerText, headerText));
-        sortByColumnNamesSelect.appendChild(new Option(headerText, headerText));
-    });
-
-    renderTable(allData);
-})
-.catch(error => {
-    console.error('Error loading or processing data:', error);
-    dataView.textContent = `Error loading data: ${error.message}`;
-});
-
-// --- Set Event Listeners --- //
-showAllButton.addEventListener('click', () => {
-    highlightedColumn = null;
-    renderTable(allData);
-});
-
-filterValueInput.addEventListener('input', filterAndRender);
-filterColumnNamesSelect.addEventListener('change', filterAndRender);
-
-sortByColumnNamesSelect.addEventListener('change', sortAndRender);
-sortDirectionSelect.addEventListener('change', sortAndRender);
-
-inputLimit.addEventListener('input', renderLimitedTable);
-
-summaryBtn.addEventListener('click', displaySummary);
-
-
 // --- Input Callback Functions --- //
 /**
  * Creates a table display with the provided data.
- * @param {*} dataToDisplay - The data to render to the table.
- * @param {*} [colLimit] - Optional. Number of columns to render. If not provided all columns will be rendered.
- * @param {*} [highlightColumn] - Optional. The name of a column to highlight. If not provided no columns will be highlighted.
+ * @param {Object} dataToDisplay - The data to render to the table.
+ * @param {Number} [colLimit] - Optional. Number of columns to render. If not provided all columns will be rendered.
+ * @param {String} [highlightColumn] - Optional. The name of a column to highlight. If not provided no columns will be highlighted.
  */
-function renderTable(dataToDisplay, colLimit = null, highlightColumn = null) {
-    dataView.innerHTML = '';
+function renderTable(dataToDisplay, targetElement = dataView, colLimit = null, highlightColumn = null) {
+    targetElement.innerHTML = '';
 
     if (!dataToDisplay || dataToDisplay.length === 0) {
-        dataView.textContent = 'No data to display.';
+        targetElement.textContent = 'No data to display.';
         return;
     }
 
@@ -136,15 +150,15 @@ function renderTable(dataToDisplay, colLimit = null, highlightColumn = null) {
     });
     table.appendChild(tbody);
 
-    dataView.appendChild(table);
+    targetElement.appendChild(table);
 }
 
 /**
  * Fetches the column and value to filter in the table, filters the data, and renders the table.
  */
 function filterAndRender() {
-    const filterValue = filterValueInput.value.toLowerCase().trim();
-    const selectedColumn = filterColumnNamesSelect.value;
+    const filterValue = elements.filterValueInput.value.toLowerCase().trim();
+    const selectedColumn = elements.filterColumnNamesSelect.value;
     let dataToRender = allData;
 
     if (filterValue) {
@@ -154,21 +168,21 @@ function filterAndRender() {
         });
     }
 
-    const colLimitValue = inputLimit.value ? parseInt(inputLimit.value, 10) : null;
+    const colLimitValue = elements.inputLimit.value ? parseInt(elements.inputLimit.value, 10) : null;
     highlightedColumn = selectedColumn;
-    renderTable(dataToRender, colLimitValue, highlightedColumn);
+    renderTable(dataToRender, elements.filterDataView, colLimitValue, highlightedColumn);
 }
 
 /**
  * Fetches the column to sort by and the order (ascending/descending) to render the table in. 
  */
 function sortAndRender() {
-    const columnName = sortByColumnNamesSelect.value;
-    const sortDirection = sortDirectionSelect.value;
+    const columnName = elements.sortByColumnNamesSelect.value;
+    const sortDirection = elements.sortDirectionSelect.value;
     if (!columnName) return;
 
-    const currentFilterValue = filterValueInput.value.toLowerCase().trim();
-    const currentSelectedColumn = filterColumnNamesSelect.value;
+    const currentFilterValue = elements.filterValueInput.value.toLowerCase().trim();
+    const currentSelectedColumn = elements.filterColumnNamesSelect.value;
     let dataToSort = currentFilterValue
         ? allData.filter(item => String(item[currentSelectedColumn] ?? '').toLowerCase().includes(currentFilterValue))
         : allData;
@@ -193,9 +207,9 @@ function sortAndRender() {
         return sortDirection === 'desc' ? -comparison : comparison;
     });
 
-    const colLimitValue = inputLimit.value ? parseInt(inputLimit.value, 10) : null;
+    const colLimitValue = elements.inputLimit.value ? parseInt(elements.inputLimit.value, 10) : null;
     highlightedColumn = columnName;
-    renderTable(sortedData, colLimitValue, highlightedColumn);
+    renderTable(sortedData, elements.sortDataView, colLimitValue, highlightedColumn);
 }
 
 /**
@@ -203,17 +217,17 @@ function sortAndRender() {
  */
 function renderLimitedTable() {
     const totalColumns = headers.length;
-    const value = parseInt(inputLimit.value, 10);
-    const currentFilterValue = filterValueInput.value.toLowerCase().trim();
-    const currentSelectedColumn = filterColumnNamesSelect.value;
+    const value = parseInt(elements.inputLimit.value, 10);
+    const currentFilterValue = elements.filterValueInput.value.toLowerCase().trim();
+    const currentSelectedColumn = elements.filterColumnNamesSelect.value;
     let dataToRender = currentFilterValue
         ? allData.filter(item => String(item[currentSelectedColumn] ?? '').toLowerCase().includes(currentFilterValue))
         : allData;
 
     if (!isNaN(value) && value >= 0 && value <= totalColumns) {
-        renderTable(dataToRender, value, highlightedColumn);
-    } else if (inputLimit.value === '') {
-        renderTable(dataToRender, null, highlightedColumn);
+        renderTable(dataToRender, elements.limitDataView, value, highlightedColumn);
+    } else if (elements.inputLimit.value === '') {
+        renderTable(dataToRender, elements.limitDataView, null, highlightedColumn);
     }
 }
 
@@ -222,19 +236,15 @@ function renderLimitedTable() {
  * Renders the table with all unique values present in each column.
  */
 function displaySummary() {
-    dataView.innerHTML = '';
-
-    summaryView.textContent = 'This is the data summary.';
-    dataView.appendChild(summaryView);
-    dataView.innerHTML = '';
+    elements.summaryDataView.innerHTML = '';
 
     if (allData.length === 0) {
-        dataView.textContent = 'No data to summarize.';
+        elements.summaryDataView.textContent = 'No data to summarize.';
         return;
     }
 
     const table = document.createElement('table');
-    table.classList.add('summary-table');
+    table.classList.add('data-table');
 
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
@@ -257,6 +267,6 @@ function displaySummary() {
     tbody.appendChild(summaryRow);
     table.appendChild(tbody);
 
-    dataView.appendChild(table);
+    elements.summaryDataView.appendChild(table);
 }
 
