@@ -96,6 +96,9 @@ document.addEventListener('DOMContentLoaded', () => {
         table = document.createElement('table');
         table.classList.add('data-table');
 
+        // Get headers from the first object
+        headers = Object.keys(data[0]);
+
         // Get headers from the first object, assuming uniform structure
         if (colLimit !== null && colLimit >= 0 && colLimit <= headers.length) {
             headers = headers.slice(0, colLimit);
@@ -133,13 +136,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
      // listen for changes
     inputLimit.addEventListener('input', () => {
-        if (!data) return;
+        if (!jsonData) return;
         const value = parseInt(inputLimit.value, 10);
-        if (!isNaN(value) && value >= 0 && value <= data.length) {
-            buildTable(data, value);
+        if (!isNaN(value) && value >= 0 && value <= headers.length) {
+            buildTable(jsonData, value);
         } else if (inputLimit.value === '') {
             // if cleared input rebuild
-            buildTable(data);
+            buildTable(jsonData);
         }
     });
 });
