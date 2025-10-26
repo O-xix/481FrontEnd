@@ -4,11 +4,30 @@ body {
     background-color: #f4f7f6;
 }
 
+#header-container {
+    background-color: hsl(210, 63%, 77%);
+    padding: 2rem;
+    border-radius: 1rem;
+}
+
 .data-view {
     margin: 20px 0;
     padding: 15px;
     background-color: #ffffff;
-    overflow-x: auto; /* Scrollable */
+    overflow-x: auto;
+}
+
+#view-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 1rem;
+}
+
+#view-container div{
+    padding: 1rem; 
+    border-radius: 1rem;
+    background-color: hsl(125, 63%, 77%)
 }
 
 .data-table {
@@ -16,6 +35,7 @@ body {
     border-collapse: collapse;
     margin: 0;
     color: #333;
+    background-color: white;
 }
 
 thead th {
