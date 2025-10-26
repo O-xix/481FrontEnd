@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Find and check button elements
     const showAllButton = document.querySelector('#show-all-input button');
     const sortByButton = document.querySelector('#sort-by-input button');
-    const sortByDropDown = document.querySelector('#sort-by-input select'); // Assuming this is a select, NOT an input
+    const sortByDropDown = document.querySelector('#sort-by-input input'); // Assuming this is a select, NOT an input
 
     // General element check
     if (!dataView || !columnNamesSelect || !valueInput || !summaryBtn || !inputLimit || !showAllButton || !sortByButton || !sortByDropDown) {
