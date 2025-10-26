@@ -12,22 +12,22 @@ body {
 }
 
 .data-table {
-    width: 100%; 
-    border-collapse: collapse; 
+    width: 100%;
+    border-collapse: collapse;
     margin: 0;
     color: #333;
 }
 
 thead th {
-    background-color: #007bff; 
-    color: white; 
+    background-color: #007bff;
+    color: white;
     padding: 12px 15px;
     text-align: left;
     font-size: 14px;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     border-bottom: 2px solid #0056b3;
-    position: sticky; 
+    position: sticky;
     top: 0;
 }
 
@@ -55,4 +55,20 @@ tbody td.highlighted-column {
 
 tbody tr:hover td.highlighted-column {
     background-color: #c3e6cb;
+}
+
+.trueCell {
+    background-color: green;
+}
+
+.falseCell {
+    background-color: red;
+}
+
+.dayCell {
+    background-color: yellow;
+}
+
+.nightCell {
+    background-color: black;
 }

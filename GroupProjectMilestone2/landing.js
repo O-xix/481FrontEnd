@@ -55,12 +55,17 @@ document.addEventListener('DOMContentLoaded', () => {
             displayedHeaders.forEach(header => {
                 const cell = document.createElement('td');
                 cell.textContent = item[header] ?? '';
+                if(cell.textContent == "true") cell.classList.add('trueCell');
+                if(cell.textContent == "false") cell.classList.add('falseCell');
+                if(cell.textContent == "Day") cell.classList.add('dayCell');
+                if(cell.textContent == "Night") cell.classList.add('nightCell');
                 if (highlightColumn === header) cell.classList.add('highlighted-column');
                 row.appendChild(cell);
             });
             tbody.appendChild(row);
         });
         table.appendChild(tbody);
+
         dataView.appendChild(table);
     }
 
