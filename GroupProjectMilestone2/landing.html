@@ -25,6 +25,64 @@
         <button>C</button>
         <button>D</button>
         <button>E</button>
+        <div id="show-all-input">
+            <button>Show all</button>
+        </div>
+        <div id="sort-by-input">
+            <button>Sort by</button>
+            <input list="table-columns" placeholder="Enter a column name... ">
+            <datalist id="table-columns">
+                <option value="Airport_Code">Airport_Code</option>
+                <option value="Amenity">Amenity</option>
+                <option value="Astronomical_Twilight">Astronomical_Twilight</option>
+                <option value="Bump">Bump</option>
+                <option value="City">City</option>
+                <option value="Civil_Twilight">Civil_Twilight</option>
+                <option value="Country">Country</option>
+                <option value="County">County</option>
+                <option value="Crossing">Crossing</option>
+                <option value="Description">Description</option>
+                <option value="Distance(mi)">Distance(mi)</option>
+                <option value="End_Lat">End_Lat</option>
+                <option value="End_Lng">End_Lng</option>
+                <option value="End_Time">End_Time</option>
+                <option value="Give_Way">Give_Way</option>
+                <option value="Humidity(%)">Humidity(%)</option>
+                <option value="ID">ID</option>
+                <option value="Junction">Junction</option>
+                <option value="Nautical_Twilight">Nautical_Twilight</option>
+                <option value="No_Exit">No_Exit</option>
+                <option value="Precipitation(in)">Precipitation(in)</option>
+                <option value="Pressure(in)">Pressure(in)</option>
+                <option value="Railway">Railway</option>
+                <option value="Roundabout">Roundabout</option>
+                <option value="Severity">Severity</option>
+                <option value="Source">Source</option>
+                <option value="Start_Lat">Start_Lat</option>
+                <option value="Start_Lng">Start_Lng</option>
+                <option value="Start_Time">Start_Time</option>
+                <option value="State">State</option>
+                <option value="Station">Station</option>
+                <option value="Stop">Stop</option>
+                <option value="Street">Street</option>
+                <option value="Sunrise_Sunset">Sunrise_Sunset</option>
+                <option value="Temperature(F)">Temperature(F)</option>
+                <option value="Timezone">Timezone</option>
+                <option value="Traffic_Calming">Traffic_Calming</option>
+                <option value="Traffic_Signal">Traffic_Signal</option>
+                <option value="Turning_Loop">Turning_Loop</option>
+                <option value="Visibility(mi)">Visibility(mi)</option>
+                <option value="Weather_Condition">Weather_Condition</option>
+                <option value="Weather_Timestamp">Weather_Timestamp</option>
+                <option value="Wind_Chill(F)">Wind_Chill(F)</option>
+                <option value="Wind_Direction">Wind_Direction</option>
+                <option value="Wind_Speed(mph)">Wind_Speed(mph)</option>
+                <option value="Zipcode">Zipcode</option>
+            </datalist>
+        </div>
+        <br>
+        <label for="limitColumns">Limit Viewable Columns:</label>
+        <input type="text" id="limitColumns" name="limitColumns"> <br>
 
         <div class="data-view"></div>
     </body>
