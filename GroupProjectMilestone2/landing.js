@@ -2,8 +2,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataView = document.querySelector('.data-view');
     const columnNamesSelect = document.getElementById('column-names');
     const valueInput = document.getElementById('value-input');
+    const summaryBtn = document.getElementById('summary-btn');
+    const summaryView = document.createElement('div');
 
-    if (!dataView || !columnNamesSelect || !valueInput) {
+    if (!dataView || !columnNamesSelect || !valueInput || !summaryBtn || !summaryView) {
         console.error("Error: Missing one or more required DOM elements.");
         // Log specific missing IDs for better debugging
         if (!dataView) console.error("Missing .data-view");
@@ -71,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderTable(filteredData);
     }
-
 
     fetch('data.json')
         .then(response => {
