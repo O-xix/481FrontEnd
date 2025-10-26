@@ -1,0 +1,42 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f7f6;
+}
+
+.data-view {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #ffffff;
+    overflow-x: auto; /* Scrollable */
+}
+
+.data-table {
+    width: 100%; 
+    border-collapse: collapse; 
+    margin: 0;
+    color: #333;
+}
+
+.data-table thead th {
+    background-color: #007bff; 
+    color: white; 
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 2px solid #0056b3;
+    position: sticky; 
+    top: 0;
+}
+
+.data-table tbody td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #ddd; /* Light separator lines */
+    font-size: 14px;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9; /* Zebra striping for readability */
+}

@@ -4,24 +4,22 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Group Project Milestone 2</title>
-        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="landing.css">
     </head>
 
     <body>
+        <script src="landing.js"></script>
         <div class="container">
             <h1>Welcome to Our Group Project - Milestone 2</h1>
             <p>This is the second milestone of our group project. We have made significant progress since the first milestone and are excited to share our updates with you!</p>
         </div>
+
+        <button>A</button>
+        <button>B</button>
+        <button>C</button>
+        <button>D</button>
+        <button>E</button>
+
+        <div class="data-view"></div>
     </body>
 </html>
-
-<script>
-    fetch('data.json')
-        .then(response => response.json())
-        .then(data => {
-            console.log('Data loaded:', data);
-        })
-        .catch(error => {
-            console.error('Error loading data:', error);
-        });
-</script>
