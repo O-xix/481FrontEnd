@@ -1,8 +1,4 @@
 <!DOCTYPE html>
-
-<!-- @TODO: Need to finish the project description. -->
-<!-- @TODO: Can add CSS and JavaScript, if wanted; they would have to be enbed within this single file. -->
-<!-- @TODO: It seems like this needs to be hosted to be able to submit to the assignment, "Group Project milestone 1". -->
 <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -13,8 +9,68 @@
 
     <body>
         <div class="container">
-            <h1>Welcome to Our Group Project</h1>
-            <p>This is the first milestone of our group project. Stay tuned for more updates!</p>
+            <h2>Welcome to</h2>
+            <h1 class="titleView">U.S Accidents!</h1>
+            <h3>Presented by Teja, Simon, and Aaron</h3>
+
+            <p>This project will cover U.S Accident data. Various views will be avaliable, allowing the user to sort, show all, filter, summarize, and limit the visible rows of data. In the future, 
+                data visualization will be an important part of our project. We will create a heat map that shows crashes per region per month, and the ability to move around in time, seeing the heat map adjust dynamically.
+                We will also allow the user to adjust the data to simulate changes in accident trends, adding, deleting, or updating data. <br>
+                Our data is from 2016-2023 and sourced from Kaggle: <a href="https://www.kaggle.com/datasets/sobhanmoosavi/us-accidents/data">us-accidents/data</a> <br>
+                Listed below is the json format for each tuple, each tuple will have 46 columns/variables.</p>
+        </div>
+        <div>
+            <h1>JSON Format</h1>
+            <p class="jsonText">
+                [<br>
+                    "ID": "This is a unique identifier of the accident record.",<br>
+                    "Source": "Source of raw accident data",<br>
+                    "Severity": "Shows the severity of the accident, a number between 1 and 4, where 1 indicates the least impact on traffic (i.e., short delay as a result of the accident) and 4 indicates a significant impact on traffic (i.e., long delay).",<br>
+                    "Start_Time": "Shows start time of the accident in local time zone.",<br>
+                    "End_Time": "Shows end time of the accident in local time zone. End time here refers to when the impact of accident on traffic flow was dismissed.",<br>
+                    "Start_Lat": "Shows latitude in GPS coordinate of the start point.",<br>
+                    "Start_Lng": "Shows longitude in GPS coordinate of the start point.",<br>
+                    "End_Lat": "Shows latitude in GPS coordinate of the end point.",<br>
+                    "End_Lng": "Shows longitude in GPS coordinate of the end point.",<br>
+                    "Distance(mi)": "The length of the road extent affected by the accident in miles.",<br>
+                    "Description": "Shows a human provided description of the accident.",<br>
+                    "Street": "Shows the street name in address field.",<br>
+                    "City": "Shows the city in address field.",<br>
+                    "County": "Shows the county in address field.",<br>
+                    "State": "Shows the state in address field.",<br>
+                    "Zipcode": "Shows the zipcode in address field.",<br>
+                    "Country": "Shows the country in address field.",<br>
+                    "Timezone": "Shows timezone based on the location of the accident (eastern, central, etc.).",<br>
+                    "Airport_Code": "Denotes an airport-based weather station which is the closest one to location of the accident.",<br>
+                    "Weather_Timestamp": "Shows the time-stamp of weather observation record (in local time).",<br>
+                    "Temperature(F)": "Shows the temperature (in Fahrenheit).",<br>
+                    "Wind_Chill(F)": "Shows the wind chill (in Fahrenheit).",<br>
+                    "Humidity(%)": "Shows the humidity (in percentage).",<br>
+                    "Pressure(in)": "Shows the air pressure (in inches).",<br>
+                    "Visibility(mi)": "Shows visibility (in miles).",<br>
+                    "Wind_Direction": "Shows wind direction.",<br>
+                    "Wind_Speed(mph)": "Shows wind speed (in miles per hour).",<br>
+                    "Precipitation(in)": "Shows precipitation amount in inches, if there is any.",<br>
+                    "Weather_Condition": "Shows the weather condition (rain, snow, thunderstorm, fog, etc.)",<br>
+                    "Amenity": "A POI annotation which indicates presence of amenity in a nearby location.",<br>
+                    "Bump": "A POI annotation which indicates presence of speed bump or hump in a nearby location.",<br>
+                    "Crossing": "A POI annotation which indicates presence of crossing in a nearby location.",<br>
+                    "Give_Way": "A POI annotation which indicates presence of give_way in a nearby location.",<br>
+                    "Junction": "A POI annotation which indicates presence of junction in a nearby location.",<br>
+                    "No_Exit": "A POI annotation which indicates presence of no_exit in a nearby location.",<br>
+                    "Railway": "A POI annotation which indicates presence of railway in a nearby location.",<br>
+                    "Roundabout": "A POI annotation which indicates presence of roundabout in a nearby location.",<br>
+                    "Station": "A POI annotation which indicates presence of station in a nearby location.",<br>
+                    "Stop": "A POI annotation which indicates presence of stop in a nearby location.",<br>
+                    "Traffic_Calming": "A POI annotation which indicates presence of traffic_calming in a nearby location.",<br>
+                    "Traffic_Signal": "A POI annotation which indicates presence of traffic_signal in a nearby location.",<br>
+                    "Turning_Loop": "A POI annotation which indicates presence of turning_loop in a nearby location.",<br>
+                    "Sunrise_Sunset": "Shows the period of day (i.e. day or night) based on sunrise/sunset.",<br>
+                    "Civil_Twilight": "Shows the period of day (i.e. day or night) based on civil twilight.",<br>
+                    "Nautical_Twilight": "Shows the period of day (i.e. day or night) based on nautical twilight.",<br>
+                    "Astronomical_Twilight": "Shows the period of day (i.e. day or night) based on astronomical twilight."<br>
+                ]
+            </p>
         </div>
         <!-- Continue writing the project description. -->
         <p></p>
