@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * The dataView dom element must also be fetched.
      * @param {Object} data - Table rows to display.
      */
-    function buildTable(data, colLimit = data.length){
+    function buildTable(data, colLimit = 46){
         // Check if data is null, undefined, or an empty array
         if (!data || !dataView || !Array.isArray(data) || data.length === 0) {
             dataView.textContent = 'No data to display.';
