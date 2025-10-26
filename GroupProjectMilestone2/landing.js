@@ -144,6 +144,13 @@ function renderTable(dataToDisplay, targetElement = dataView, colLimit = null, h
             if(cell.textContent == "Day") cell.classList.add('dayCell');
             if(cell.textContent == "Night") cell.classList.add('nightCell');
             if (highlightColumn === header) cell.classList.add('highlighted-column');
+
+            if (header === 'Severity') {
+                if (cell.textContent == "1") cell.classList.add('lowSeverityCell');
+                if (cell.textContent == "2") cell.classList.add('mediumSeverityCell');
+                if (cell.textContent == "3") cell.classList.add('highSeverityCell');
+                if (cell.textContent == "3") cell.classList.add('extremeSeverityCell');
+            }
             row.appendChild(cell);
         });
         tbody.appendChild(row);
