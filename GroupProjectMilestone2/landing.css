@@ -92,3 +92,19 @@ tbody tr:hover td.highlighted-column {
 .nightCell {
     color: rgb(16, 0, 165);
 }
+
+.lowSeverityCell {
+    color: green;
+}
+
+.mediumSeverityCell {
+    color: rgb(255, 166, 0);
+}
+
+.highSeverityCell {
+    color: orange;
+}
+
+.extremeSeverityCell {
+    color: red;
+}
