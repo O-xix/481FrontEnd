@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Data loaded:', data);
             jsonData = data;
 
-            displayTable(jsonData);
+            buildTable(jsonData);
         })
         .catch(error => {
             console.error('Error loading or processing data:', error);
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const showAllButton = document.querySelector('#show-all-input button');
     showAllButton.addEventListener('click', () => {
         console.log("Button Pressed");
-        displayTable(jsonData);
+        buildTable(jsonData);
     });
 
     const sortByButton = document.querySelector('#sort-by-input button');
@@ -75,59 +75,58 @@ document.addEventListener('DOMContentLoaded', () => {
             return 0;
         });
 
-        displayTable(sortedData);
+        buildTable(sortedData);
     })
-});
 
-/**
- * Takes in data and creates the table in the DOM. The data should be processed (filtered, sorted, etc.) before use.
- * The dataView dom element must also be fetched.
- * @param {Object} data - Table rows to display.
- */
-function displayTable(data){
-    // Check if data is null, undefined, or an empty array
-    if (!data || !dataView || !Array.isArray(data) || data.length === 0) {
-        dataView.textContent = 'No data to display.';
-        return;
-    }
+    /**
+     * Takes in data and creates the table in the DOM. The data should be processed (filtered, sorted, etc.) before use.
+     * The dataView dom element must also be fetched.
+     * @param {Object} data - Table rows to display.
+     */
+    function buildTable(data, rowLimit = data.length){
+        // Check if data is null, undefined, or an empty array
+        if (!data || !dataView || !Array.isArray(data) || data.length === 0) {
+            dataView.textContent = 'No data to display.';
+            return;
+        }
 
-    dataView.innerHTML = "";
-    
-    // Create and build the table
-    const table = document.createElement('table');
-    table.classList.add('data-table');
+        dataView.innerHTML = "";
+        
+        // Create and build the table
+        table = document.createElement('table');
+        table.classList.add('data-table');
 
-            // Get headers from the first object, assuming uniform structure
-            headers = Object.keys(dataArray[0]); 
-            
-            // Table headers
-            const thead = document.createElement('thead');
-            const headerRow = document.createElement('tr');
-            
-            headers.forEach(headerText => {
-                const th = document.createElement('th');
-                th.textContent = headerText;
-                headerRow.appendChild(th);
+        // Get headers from the first object, assuming uniform structure
+        headers = Object.keys(data[0]); 
+        
+        // Table headers
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // table body
+        tbody = document.createElement('tbody');
+        data.slice(0, rowLimit).forEach(item => {
+            const row = document.createElement('tr');
+            headers.forEach(header => {
+                const cell = document.createElement('td');
+                cell.textContent = item[header] ?? ''; 
+                row.appendChild(cell);
             });
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
 
-            // table body
-            tbody = document.createElement('tbody');
-            dataArray.slice(0, rowLimit).forEach(item => {
-                const row = document.createElement('tr');
-                headers.forEach(header => {
-                    const cell = document.createElement('td');
-                    cell.textContent = item[header] ?? ''; 
-                    row.appendChild(cell);
-                });
-                tbody.appendChild(row);
-            });
-            table.appendChild(tbody);
-
-            // Append the completed table to the data-view container
-            dataView.innerHTML = ''; 
-            dataView.appendChild(table);
+        // Append the completed table to the data-view container
+        dataView.innerHTML = ''; 
+        dataView.appendChild(table);
     }
 
      // listen for changes
