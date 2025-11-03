@@ -1,33 +1,155 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { MapContainer, TileLayer, GeoJSON} from 'react-leaflet'
+import { useState, useEffect } from 'react';
+import { renderToString } from 'react-dom/server';
+import L from 'leaflet';
+import Navbar from './components/Navbar/Navbar';
+import Popup from './components/Popup/Popup';
+import sampleData from './assets/sampleData';
+import 'leaflet/dist/leaflet.css'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  // --- Data Constants --- //
+  // GeoJSON that contains data for the shape of each state.
+  const [geoData, setGeoData] = useState<any>(null);
+  
+  // Center on USA
+  const defaultPosition: [number, number] = [39.8283, -98.5795];
+  const defaultZoom = 4;
 
+  // Color scale with thresholds
+  const colors: { threshold: number; color: string }[] = [
+    { threshold: 20000000, color: '#800026' },
+    { threshold: 10000000, color: '#BD0026' },
+    { threshold: 5000000, color: '#E31A1C' },
+    { threshold: 3000000, color: '#FC4E2A' },
+    { threshold: 2000000, color: '#FD8D3C' },
+    { threshold: 1000000, color: '#FEB24C' },
+    { threshold: 500000, color: '#FED976' },
+    { threshold: 0, color: '#FFEDA0' }
+  ];
+
+  // Fetch US states GeoJSON
+  useEffect(() => {
+    fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json')
+      .then(response => response.json())
+      .then(data => {
+        setGeoData(data);
+      })
+      .catch(error => console.error('Error loading GeoJSON:', error));
+  }, []);
+
+  // --- Helper and Handler Functions --- //
+  /**
+   * Returns the corresponding color in the {@link colors} object to the given amount of crashes.
+   * @param {number} value - Amount of crashes.
+   * @returns {string} - Hex color code corresponding to the heatmap intensity.
+   */
+  const getColor = (value: number) => {
+    for (const { threshold, color } of colors) {
+      if (value > threshold) {
+        return color;
+      }
+    }
+    return colors[colors.length - 1].color;
+  };
+
+  /**
+   * Styles the feature based on the corresponding data's value with {@link getColor}.
+   * @param {any} feature - The feature to be styled.
+   * @returns {object} - Styling data for the feature.
+   */
+  function style(feature: any){
+    const stateName = feature.properties.name;
+    const value = sampleData[stateName] || 0;
+    
+    return {
+      fillColor: getColor(value),
+      weight: 2,
+      opacity: 1,
+      color: 'white',
+      dashArray: '3',
+      fillOpacity: 0.7
+    };
+  };
+
+  /**
+   * Highlights the feature once the mouse enters.
+   * @param {L.LeafletMouseEvent} e - Event object corresponding to the mouseover event. 
+   */
+  function highlightFeature(e: L.LeafletMouseEvent){
+    const layer = e.target;
+    layer.setStyle({
+      weight: 5,
+      color: '#666',
+      dashArray: '',
+      fillOpacity: 0.9
+    });
+    layer.bringToFront();
+  };
+
+  /**
+   * Resets the styling of the feature once the mouse leaves.
+   * @param {L.LeafletMouseEvent} e - Event object corresponding to the mouseout event. 
+   */
+  function resetHighlight(e: L.LeafletMouseEvent){
+    const layer = e.target;
+    layer.setStyle(style(layer.feature));
+  };
+
+  /**
+   * Assigns mouse handlers for showing popup content and highlighting the feature on hover.
+   * @param {any} feature - The feature to assign mouse handlers to.
+   * @param {L.Layer} layer - The layer the feature is on.
+   */
+  function onEachFeature(feature: any, layer: L.Layer){
+    const stateName = feature.properties.name;
+    const value = sampleData[stateName] || 0;
+    
+    const popupContent = renderToString(<Popup stateName={stateName} value={value}/>);
+    layer.bindPopup(popupContent);
+    
+    layer.on({
+      mouseover: highlightFeature,
+      mouseout: resetHighlight
+    });
+  };
+
+  // --- Component Structure --- //
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Navbar/>
+      <main className="map-container">
+        <MapContainer 
+          center={defaultPosition} 
+          zoom={defaultZoom} 
+          scrollWheelZoom={true}
+          className="leaflet-map"
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {geoData && (
+            <GeoJSON 
+              data={geoData} 
+              style={style}
+              onEachFeature={onEachFeature}
+            />
+          )}
+        </MapContainer>
+        <div id="legend-container">
+          <div id="legend-title-container">
+            <h3 id="legend-title">Legend</h3>
+          </div>
+          {colors.map(({threshold, color}) => {
+            return (<div className='legend-item'>
+              <div className='color-swatch' style={{"backgroundColor": color}}></div>
+              <p className='legend-threshold'>{threshold.toLocaleString()}</p>
+            </div>)
+          })}
+        </div>
+      </main>
     </>
   )
 }

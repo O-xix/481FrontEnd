@@ -1,0 +1,11 @@
+#popup-container {
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+#popup-title {
+    font-size: 1.5rem;
+    line-height: 1;
+    margin: 0.5rem 0;
+}
