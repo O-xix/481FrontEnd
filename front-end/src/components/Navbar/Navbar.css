@@ -1,0 +1,24 @@
+#navbar-container {
+    box-sizing: border-box;
+    width: 100%;
+    height: 12%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: #FFE5B4 1.5vh solid;
+    padding: 0 6vw;
+    color: #ef933d;
+}
+
+#navbar-title {
+    font-size: 1.75rem;
+}
+
+#nav-container ul {
+    display: flex;
+    list-style: none;
+    gap: 3rem;
+    font-size: 1.2rem;
+    text-align: center;
+    justify-content: space-evenly;
+}
