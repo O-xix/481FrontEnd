@@ -4,7 +4,6 @@ import { renderToString } from 'react-dom/server';
 import L from 'leaflet';
 import sampleData from '../assets/sampleData';
 import { stateNameToAbbreviation } from '../assets/stateNames';
-import geoData from '../assets/us-states.json';
 import Navbar from '../components/Navbar/Navbar';
 import Popup from '../components/Popup/Popup';
 import 'leaflet/dist/leaflet.css'
@@ -15,8 +14,8 @@ function StateMap() {
     // --- Data Constants --- //
   // GeoJSON that contains data for the shape of each state.
   const [geoData, setGeoData] = useState<any>(null);
+  //const [accidentData, setAccidentData] = useState<StateAccidentData>(sampleData);
   const [accidentData, setAccidentData] = useState<StateAccidentData>(sampleData);
-  const [accidentData, setAccidentData] = useState<StateAccidentData | null>(sampleData);
   
   // Center on USA
   const defaultPosition: [number, number] = [39.8283, -98.5795];
@@ -59,7 +58,6 @@ function StateMap() {
         if (Object.keys(processedData).length > 0) {
           setAccidentData(processedData);
         }
-        setAccidentData(processedData);
       })
       .catch(error => console.error('Error fetching state data:', error));
   }, []);
@@ -161,6 +159,7 @@ function StateMap() {
               data={geoData} 
               style={style}
               onEachFeature={onEachFeature}
+              key={JSON.stringify(accidentData)}
             />
           )}
         </MapContainer>
