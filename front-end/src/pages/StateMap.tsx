@@ -2,15 +2,21 @@ import { MapContainer, TileLayer, GeoJSON} from 'react-leaflet'
 import { useState, useEffect } from 'react';
 import { renderToString } from 'react-dom/server';
 import L from 'leaflet';
+import sampleData from '../assets/sampleData';
+import { stateNameToAbbreviation } from '../assets/stateNames';
+import geoData from '../assets/us-states.json';
 import Navbar from '../components/Navbar/Navbar';
 import Popup from '../components/Popup/Popup';
-import sampleData from '../assets/sampleData';
 import 'leaflet/dist/leaflet.css'
+
+type StateAccidentData = { [abbreviation: string]: number };
 
 function StateMap() {
     // --- Data Constants --- //
   // GeoJSON that contains data for the shape of each state.
   const [geoData, setGeoData] = useState<any>(null);
+  const [accidentData, setAccidentData] = useState<StateAccidentData>(sampleData);
+  const [accidentData, setAccidentData] = useState<StateAccidentData | null>(sampleData);
   
   // Center on USA
   const defaultPosition: [number, number] = [39.8283, -98.5795];
@@ -18,13 +24,13 @@ function StateMap() {
 
   // Color scale with thresholds
   const colors: { threshold: number; color: string }[] = [
-    { threshold: 20000000, color: '#800026' },
-    { threshold: 10000000, color: '#BD0026' },
-    { threshold: 5000000, color: '#E31A1C' },
-    { threshold: 3000000, color: '#FC4E2A' },
-    { threshold: 2000000, color: '#FD8D3C' },
-    { threshold: 1000000, color: '#FEB24C' },
-    { threshold: 500000, color: '#FED976' },
+    { threshold: 2000000, color: '#800026' },
+    { threshold: 1000000, color: '#BD0026' },
+    { threshold: 500000, color: '#E31A1C' },
+    { threshold: 300000, color: '#FC4E2A' },
+    { threshold: 200000, color: '#FD8D3C' },
+    { threshold: 100000, color: '#FEB24C' },
+    { threshold: 50000, color: '#FED976' },
     { threshold: 0, color: '#FFEDA0' }
   ];
 
@@ -36,6 +42,26 @@ function StateMap() {
         setGeoData(data);
       })
       .catch(error => console.error('Error loading GeoJSON:', error));
+  }, []);
+
+  // Fetch accident data by state from backend
+  // @TODO: Replace with real backend endpoint
+  useEffect(() => {
+    fetch('http://127.0.0.1:5000/accidents/count_by_state')
+      .then(response => response.json())
+      .then((apiData: Array<{ State: string, AccidentCount: number }>) => {
+        const processedData: StateAccidentData = {};
+        for (const item of apiData) {
+          processedData[item.State] = item.AccidentCount;
+        }
+
+        // After fetching, update the state with the new data
+        if (Object.keys(processedData).length > 0) {
+          setAccidentData(processedData);
+        }
+        setAccidentData(processedData);
+      })
+      .catch(error => console.error('Error fetching state data:', error));
   }, []);
 
   // --- Helper and Handler Functions --- //
@@ -60,7 +86,8 @@ function StateMap() {
    */
   function style(feature: any){
     const stateName = feature.properties.name;
-    const value = sampleData[stateName] || 0;
+    const stateAbbr = stateNameToAbbreviation[stateName];
+    const value = (accidentData && accidentData[stateAbbr]) || 0;
     
     return {
       fillColor: getColor(value),
@@ -103,7 +130,8 @@ function StateMap() {
    */
   function onEachFeature(feature: any, layer: L.Layer){
     const stateName = feature.properties.name;
-    const value = sampleData[stateName] || 0;
+    const stateAbbr = stateNameToAbbreviation[stateName];
+    const value = (accidentData && accidentData[stateAbbr]) || 0;
     
     const popupContent = renderToString(<Popup stateName={stateName} value={value}/>);
     layer.bindPopup(popupContent);
@@ -128,7 +156,7 @@ function StateMap() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {geoData && (
+          {geoData && accidentData && (
             <GeoJSON 
               data={geoData} 
               style={style}
@@ -151,4 +179,5 @@ function StateMap() {
     </>
   )
 }
+
 export default StateMap;
