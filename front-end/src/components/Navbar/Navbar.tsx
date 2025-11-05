@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import './Navbar.css';
 /**
  * Navbar component to be used across pages for navigation.
@@ -9,13 +10,16 @@ function Navbar(){
             <nav id="nav-container">
                 <ul>
                     <li>
-                        <a>Home</a>
+                        <Link to="/">Home</Link>
                     </li>
                     <li>
-                        <a>HeatMap</a>
+                        <Link to="/map">HeatMap</Link>
                     </li>
                     <li>
-                        <a>Project</a>
+                        <Link to="/about">About Us</Link>
+                    </li>
+                    <li>
+                        <Link to="/dashboard">Dashboard</Link>
                     </li>
                 </ul>
             </nav>
