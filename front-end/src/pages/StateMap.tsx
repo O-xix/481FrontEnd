@@ -46,20 +46,28 @@ function StateMap() {
   // Fetch accident data by state from backend
   // @TODO: Replace with real backend endpoint
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/accidents/count_by_state')
-      .then(response => response.json())
-      .then((apiData: Array<{ State: string, AccidentCount: number }>) => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/accidents/count_by_state', { cache: 'no-store' });
+        if (!res.ok) {
+          const text = await res.text();
+          console.warn('Backend /accidents/count_by_state returned', res.status, text);
+          if (!cancelled) setAccidentData(sampleData); // fallback to bundled sample data
+          return;
+        }
+        const apiData = await res.json() as Array<{ State: string, AccidentCount: number }>;
         const processedData: StateAccidentData = {};
         for (const item of apiData) {
-          processedData[item.State] = item.AccidentCount;
+          if (item && item.State) processedData[item.State] = Number(item.AccidentCount) || 0;
         }
-
-        // After fetching, update the state with the new data
-        if (Object.keys(processedData).length > 0) {
-          setAccidentData(processedData);
-        }
-      })
-      .catch(error => console.error('Error fetching state data:', error));
+        if (!cancelled && Object.keys(processedData).length > 0) setAccidentData(processedData);
+      } catch (error) {
+        console.error('Error fetching state data:', error);
+        if (!cancelled) setAccidentData(sampleData);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   // --- Helper and Handler Functions --- //
@@ -168,11 +176,13 @@ function StateMap() {
             <h3 id="legend-title">Legend</h3>
           </div>
           {colors.map(({threshold, color}) => {
-            return (<div className='legend-item'>
-              <div className='color-swatch' style={{"backgroundColor": color}}></div>
-              <p className='legend-threshold'>{threshold.toLocaleString()}</p>
-            </div>)
-          })}
+            return (
+              <div className='legend-item' key={`${threshold}-${color}`}>
+                <div className='color-swatch' style={{ backgroundColor: color }} />
+                <p className='legend-threshold'>{threshold.toLocaleString()}</p>
+              </div>
+            );
+           })}
         </div>
       </main>
     </>
