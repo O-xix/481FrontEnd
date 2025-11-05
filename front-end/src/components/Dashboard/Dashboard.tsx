@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './Dashboard.css';
 
 interface StateData {
@@ -11,6 +11,26 @@ interface YearlyStats {
   count: number;
 }
 
+// Default fallback data
+const DEFAULT_TOTAL = 7728394;
+const DEFAULT_STATE_DATA: StateData[] = [
+  { State: 'CA', AccidentCount: 1741433 },
+  { State: 'FL', AccidentCount: 880192 },
+  { State: 'TX', AccidentCount: 582837 },
+  { State: 'SC', AccidentCount: 382557 },
+  { State: 'NY', AccidentCount: 347960 },
+];
+const DEFAULT_YEARLY: YearlyStats[] = [
+  { year: 2016, count: 410821 },
+  { year: 2017, count: 717290 },
+  { year: 2018, count: 893426 },
+  { year: 2019, count: 954302 },
+  { year: 2020, count: 1161598 },
+  { year: 2021, count: 1412433 },
+  { year: 2022, count: 1268806 },
+  { year: 2023, count: 166552 },
+];
+
 function Dashboard() {
   const [totalRecords, setTotalRecords] = useState<number>(0);
   const [stateData, setStateData] = useState<StateData[]>([]);
@@ -18,70 +38,84 @@ function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
-    let controller = new AbortController();
+  const controllerRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
 
-    const fetchData = async () => {
-      try {
-        const options = {
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json'
-          }
-        };
+  async function loadData() {
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
 
-        const [totalRes, stateRes, yearlyRes] = await Promise.all([
-          fetch('/accidents/total_records', options),
-          fetch('/accidents/count_by_state', options),
-          fetch('/accidents/yearly_stats', options)
-        ]);
+    setIsLoading(true);
+    setError(null);
 
-        if (!mounted) {
-          console.log('Component unmounted, aborting data processing');
-          return;
+    try {
+      const options = {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json'
         }
+      };
 
-        const responses = {
-          total: totalRes.ok,
-          state: stateRes.ok,
-          yearly: yearlyRes.ok
-        };
+      const [totalRes, stateRes, yearlyRes] = await Promise.all([
+        fetch('/accidents/total_records', options),
+        fetch('/accidents/count_by_state', options),
+        fetch('/accidents/yearly_stats', options)
+      ]);
 
-        if (!totalRes.ok || !stateRes.ok || !yearlyRes.ok) {
-          throw new Error(`API Error: ${JSON.stringify(responses)}`);
-        }
+      if (!mountedRef.current) return;
 
-        const [totalData, stateData, yearlyData] = await Promise.all([
-          totalRes.json(),
-          stateRes.json(),
-          yearlyRes.json()
-        ]);
+      const okFlags = {
+        total: totalRes.ok,
+        state: stateRes.ok,
+        yearly: yearlyRes.ok
+      };
 
-        if (mounted) {
-          setTotalRecords(totalData.total);
-          setStateData(stateData);
-          setYearlyStats(yearlyData);
-          setIsLoading(false);
-        }
-      } catch (err: any) {
-        // Ignore aborts caused by navigation/unmount; treat others as real errors
-        if (err && err.name === 'AbortError') {
-          return;
-        }
-        console.error('Fetch error:', err);
-        if (mounted) {
-          setError(err instanceof Error ? err.message : 'Failed to fetch data');
-          setIsLoading(false);
-        }
+      if (!okFlags.total || !okFlags.state || !okFlags.yearly) {
+        throw new Error(`API Error: ${JSON.stringify(okFlags)}`);
       }
-    };
 
-    fetchData();
+      const [totalData, stateJson, yearlyJson] = await Promise.all([
+        totalRes.json(),
+        stateRes.json(),
+        yearlyRes.json()
+      ]);
+
+      if (!mountedRef.current) return;
+
+      setTotalRecords(Number(totalData.total) || 0);
+      setStateData(Array.isArray(stateJson) ? stateJson : []);
+      setYearlyStats(Array.isArray(yearlyJson) ? yearlyJson : []);
+      setIsLoading(false);
+      setError(null);
+    } catch (err: any) {
+      if (err && err.name === 'AbortError') {
+        console.log('Fetch aborted (expected on unmount/retry)');
+        return;
+      }
+
+      console.error('Fetch error:', err);
+
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch data');
+        setTotalRecords(DEFAULT_TOTAL);
+        setStateData(DEFAULT_STATE_DATA);
+        setYearlyStats(DEFAULT_YEARLY);
+        setIsLoading(false);
+      }
+    } finally {
+      // clear controllerRef if it's still this controller
+      if (controllerRef.current === controller) controllerRef.current = null;
+    }
+  }
+
+  useEffect(() => {
+    mountedRef.current = true;
+    loadData();
 
     return () => {
-      mounted = false;
-      controller.abort();
+      mountedRef.current = false;
+      controllerRef.current?.abort();
     };
   }, []);
 
@@ -93,20 +127,18 @@ function Dashboard() {
     );
   }
 
-  if (error) {
-    console.log('Rendering error state:', error);
-    return (
-      <div className="dashboard-container">
-        <div className="error-message">
-          <div>Error loading dashboard: {error}</div>
-          <button onClick={() => window.location.reload()}>Retry</button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="dashboard-container">
+      {/* non-blocking error banner: user sees dashboard and error message */}
+      {error && (
+        <div className="error-message" role="alert" style={{ marginBottom: '1rem' }}>
+          <div>Error loading dashboard: {error}</div>
+          <div style={{ marginTop: '0.5rem' }}>
+            <button onClick={() => loadData()} style={{ marginRight: 8 }}>Retry</button>
+          </div>
+        </div>
+      )}
+
       <div className="dashboard-header">
         <h1>Accident Statistics Dashboard</h1>
       </div>
