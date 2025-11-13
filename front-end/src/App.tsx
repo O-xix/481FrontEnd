@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard/Dashboard'
 import Navbar from './components/Navbar/Navbar'
 import Home from './pages/Home'
 import About from './pages/About'
+import TableView from './components/TableView/TableView';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/map" element={<StateMap />} />
           <Route path="/about" element={<About />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/TableView" element={<TableView />} />
         </Routes>
       </main>
     </Router>
