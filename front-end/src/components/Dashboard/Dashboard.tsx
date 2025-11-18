@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './Dashboard.css';
+import apiClient from '../../../axios.ts';
 
 interface StateData {
   State: string;
@@ -19,68 +20,45 @@ function Dashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-    let controller = new AbortController();
+    const controller = new AbortController();
 
     const fetchData = async () => {
       try {
-        const options = {
+        // Set loading state at the beginning of the fetch
+        setIsLoading(true);
+        setError(null);
+
+        const config = {
           signal: controller.signal,
-          headers: {
-            'Accept': 'application/json'
-          }
         };
 
+        // Fetch all endpoints in parallel
         const [totalRes, stateRes, yearlyRes] = await Promise.all([
-          fetch('/accidents/total_records', options),
-          fetch('/accidents/count_by_state', options),
-          fetch('/accidents/yearly_stats', options)
+          apiClient.get<{ total: number }>('/accidents/total_records', config),
+          apiClient.get<StateData[]>('/accidents/count_by_state', config),
+          apiClient.get<YearlyStats[]>('/accidents/yearly_stats', config)
         ]);
 
-        if (!mounted) {
-          console.log('Component unmounted, aborting data processing');
-          return;
-        }
+        // Set state with the data from the responses
+        setTotalRecords(totalRes.data.total);
+        setStateData(stateRes.data);
+        setYearlyStats(yearlyRes.data);
 
-        const responses = {
-          total: totalRes.ok,
-          state: stateRes.ok,
-          yearly: yearlyRes.ok
-        };
-
-        if (!totalRes.ok || !stateRes.ok || !yearlyRes.ok) {
-          throw new Error(`API Error: ${JSON.stringify(responses)}`);
-        }
-
-        const [totalData, stateData, yearlyData] = await Promise.all([
-          totalRes.json(),
-          stateRes.json(),
-          yearlyRes.json()
-        ]);
-
-        if (mounted) {
-          setTotalRecords(totalData.total);
-          setStateData(stateData);
-          setYearlyStats(yearlyData);
-          setIsLoading(false);
-        }
       } catch (err: any) {
-        // Ignore aborts caused by navigation/unmount; treat others as real errors
-        if (err && err.name === 'AbortError') {
-          return;
-        }
-        console.error('Fetch error:', err);
-        if (mounted) {
+        // Ignore abort errors, which are expected on unmount
+        if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
+          console.error('Fetch error:', err);
           setError(err instanceof Error ? err.message : 'Failed to fetch data');
-          setIsLoading(false);
         }
+      } finally {
+        // This runs regardless of success or failure
+        setIsLoading(false);
       }
     };
 
     fetchData();
 
     return () => {
-      mounted = false;
       controller.abort();
     };
   }, []);

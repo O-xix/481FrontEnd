@@ -6,6 +6,7 @@ import sampleData from '../assets/sampleData';
 import { stateNameToAbbreviation } from '../assets/stateNames';
 import Navbar from '../components/Navbar/Navbar';
 import Popup from '../components/Popup/Popup';
+import apiClient from '../../axios.ts';
 import 'leaflet/dist/leaflet.css'
 
 type StateAccidentData = { [abbreviation: string]: number };
@@ -45,29 +46,26 @@ function StateMap() {
 
   // Fetch accident data by state from backend
   // @TODO: Replace with real backend endpoint
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
+  useEffect(() => {    
+    const controller = new AbortController();
+    const fetchAccidentData = async () => {
       try {
-        const res = await fetch('/accidents/count_by_state', { cache: 'no-store' });
-        if (!res.ok) {
-          const text = await res.text();
-          console.warn('Backend /accidents/count_by_state returned', res.status, text);
-          if (!cancelled) setAccidentData(sampleData); // fallback to bundled sample data
-          return;
-        }
-        const apiData = await res.json() as Array<{ State: string, AccidentCount: number }>;
+        const response = await apiClient.get<Array<{ State: string, AccidentCount: number }>>('/accidents/count_by_state', { signal: controller.signal });
+        const apiData = response.data;
         const processedData: StateAccidentData = {};
         for (const item of apiData) {
           if (item && item.State) processedData[item.State] = Number(item.AccidentCount) || 0;
         }
-        if (!cancelled && Object.keys(processedData).length > 0) setAccidentData(processedData);
+        if (Object.keys(processedData).length > 0) setAccidentData(processedData);
       } catch (error) {
-        console.error('Error fetching state data:', error);
-        if (!cancelled) setAccidentData(sampleData);
+        if (error.name !== 'CanceledError') {
+          console.error('Error fetching state data, falling back to sample data:', error);
+          setAccidentData(sampleData);
+        }
       }
-    })();
-    return () => { cancelled = true; };
+    };
+    fetchAccidentData();
+    return () => { controller.abort(); };
   }, []);
 
   // --- Helper and Handler Functions --- //
