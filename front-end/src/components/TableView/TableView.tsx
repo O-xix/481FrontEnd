@@ -25,8 +25,15 @@ function TableView() {
         // Assuming your backend has a '/data' endpoint that returns the same JSON structure
         apiClient.get('/accidents/data/1/1')
             .then(response => {
-                // From the curl output, we know response.data is a valid JSON array.
-                const data: DataItem[] = response.data;
+                let data = response.data;
+
+                // FIX: If data is a string (as shown in debug logs), parse it into an object.
+                if (typeof data === 'string') {
+                    // Sanitize the string to make it valid JSON by replacing non-standard NaN with null.
+                    // This makes the string conform to the JSON "template".
+                    const sanitizedJsonString = data.replace(/:NaN/g, ':null');
+                    data = JSON.parse(sanitizedJsonString);
+                }
 
                 // Ensure data is an array and not empty before proceeding.
                 if (Array.isArray(data) && data.length > 0) {
@@ -135,9 +142,6 @@ function TableView() {
     if (error) return <div className="error-message">{error}</div>;
     // We remove the early return for allData.length === 0 to ensure controls always render.
     // The check will be moved to where the table is rendered.
-    if (allData.length === 0) {
-        // Special case for when the very first load returns no data at all.
-    }
 
     return (
         <div className="table-view-container">
