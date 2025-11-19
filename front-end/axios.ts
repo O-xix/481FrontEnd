@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -19,4 +19,8 @@ const apiClient = axios.create({
   ],
 });
 
+// Export a type guard to check for Axios-specific errors
+export const isAxiosError = (error: any): error is AxiosError => {
+  return axios.isAxiosError(error);
+};
 export default apiClient;

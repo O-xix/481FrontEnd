@@ -6,7 +6,7 @@ import sampleData from '../assets/sampleData';
 import { stateNameToAbbreviation } from '../assets/stateNames';
 import Navbar from '../components/Navbar/Navbar';
 import Popup from '../components/Popup/Popup';
-import apiClient from '../../axios.ts';
+import apiClient, { isAxiosError } from '../../axios.ts';
 import 'leaflet/dist/leaflet.css'
 
 type StateAccidentData = { [abbreviation: string]: number };
@@ -58,9 +58,13 @@ function StateMap() {
         }
         if (Object.keys(processedData).length > 0) setAccidentData(processedData);
       } catch (error) {
-        if (error.name !== 'CanceledError') {
+        if (isAxiosError(error)) {
+          if (error.name !== 'CanceledError') {
+            console.error('Error fetching state data, falling back to sample data:', error.message);
+            setAccidentData(sampleData);
+          }
+        } else {
           console.error('Error fetching state data, falling back to sample data:', error);
-          setAccidentData(sampleData);
         }
       }
     };
