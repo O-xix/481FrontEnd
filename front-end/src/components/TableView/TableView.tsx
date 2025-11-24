@@ -19,19 +19,24 @@ function TableView() {
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
     const [columnLimit, setColumnLimit] = useState<number | null>(null);
     const [showSummary, setShowSummary] = useState<boolean>(false);
-    const [rowLimit, setRowLimit] = useState<number | null>(1);
-    const [pageNumber, setPageNumber] = useState<number | null>(1);
+
+    // State for input fields, not directly tied to data fetching
+    const [rowLimitInput, setRowLimitInput] = useState<number | null>(10);
+    const [pageNumberInput, setPageNumberInput] = useState<number | null>(1);
+
+    // State that triggers the data fetch effect
+    const [fetchParams, setFetchParams] = useState({ rowLimit: 10, pageNumber: 1 });
 
     // --- Data Fetching ---
     useEffect(() => {
         // Don't fetch data if the row limit or page number aren't set
-        if (rowLimit === null || pageNumber === null) {
+        if (fetchParams.rowLimit === null || fetchParams.pageNumber === null) {
             return;
         }
 
         setLoading(true); // Show loading indicator for new fetches
         // Use a template literal (backticks) to build the URL dynamically
-        apiClient.get(`/accidents/data/${rowLimit}/${pageNumber}`)
+        apiClient.get(`/accidents/data/${fetchParams.rowLimit}/${fetchParams.pageNumber}`)
             .then(response => {
                 let data = response.data;
 
@@ -59,7 +64,7 @@ function TableView() {
                 setError("Failed to load data. Please check the console for more details.");
                 setLoading(false);
             });
-    }, [rowLimit, pageNumber]); // Re-run this effect when rowLimit or pageNumber changes
+    }, [fetchParams]); // Re-run this effect only when fetchParams changes
 
     // --- Derived State & Memoization ---
     // This large block of logic is memoized to prevent re-calculation on every render.
@@ -145,6 +150,16 @@ function TableView() {
         return classes.join(' ');
     };
 
+    /**
+     * Handles the click of the "Get Data" button.
+     * It updates the fetchParams state, which in turn triggers the data fetching useEffect.
+     */
+    const handleGetDataClick = () => {
+        // Only trigger fetch if both inputs are valid
+        if (rowLimitInput !== null && pageNumberInput !== null) {
+            setFetchParams({ rowLimit: rowLimitInput, pageNumber: pageNumberInput });
+        }
+    };
     // --- Render Logic ---
     if (loading) return <div>Loading data...</div>;
     if (error) return <div className="error-message">{error}</div>;
@@ -194,8 +209,8 @@ function TableView() {
                         name="page-number-input" 
                         min="1" 
                         placeholder={`1-100`}
-                        value={pageNumber ?? ''}
-                        onChange={e => setPageNumber(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                        value={pageNumberInput ?? ''}
+                        onChange={e => setPageNumberInput(e.target.value === '' ? null : parseInt(e.target.value, 10))}
                     />
                 </div>
                 <div>
@@ -207,10 +222,13 @@ function TableView() {
                         min="1" 
                         max="100"
                         placeholder={`1-100`}
-                        value={rowLimit ?? ''}
-                        onChange={e => setRowLimit(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                        value={rowLimitInput ?? ''}
+                        onChange={e => setRowLimitInput(e.target.value === '' ? null : parseInt(e.target.value, 10))}
                     />
                 </div>
+                <button className="get-data-btn" onClick={handleGetDataClick}>
+                    Get Data
+                </button>
                 <div>
                     <button className="summary-btn" onClick={() => setShowSummary(!showSummary)}>
                         {showSummary ? 'Hide Summary' : 'Show Summary'}
