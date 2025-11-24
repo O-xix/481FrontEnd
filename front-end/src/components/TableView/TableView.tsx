@@ -19,11 +19,19 @@ function TableView() {
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
     const [columnLimit, setColumnLimit] = useState<number | null>(null);
     const [showSummary, setShowSummary] = useState<boolean>(false);
+    const [rowLimit, setRowLimit] = useState<number | null>(1);
+    const [pageNumber, setPageNumber] = useState<number | null>(1);
 
     // --- Data Fetching ---
     useEffect(() => {
-        // Assuming your backend has a '/data' endpoint that returns the same JSON structure
-        apiClient.get('/accidents/data/1/1')
+        // Don't fetch data if the row limit or page number aren't set
+        if (rowLimit === null || pageNumber === null) {
+            return;
+        }
+
+        setLoading(true); // Show loading indicator for new fetches
+        // Use a template literal (backticks) to build the URL dynamically
+        apiClient.get(`/accidents/data/${rowLimit}/${pageNumber}`)
             .then(response => {
                 let data = response.data;
 
@@ -51,7 +59,7 @@ function TableView() {
                 setError("Failed to load data. Please check the console for more details.");
                 setLoading(false);
             });
-    }, []); // Empty dependency array means this runs once on component mount
+    }, [rowLimit, pageNumber]); // Re-run this effect when rowLimit or pageNumber changes
 
     // --- Derived State & Memoization ---
     // This large block of logic is memoized to prevent re-calculation on every render.
@@ -176,6 +184,31 @@ function TableView() {
                         max={headers.length}
                         placeholder={`0-${headers.length}`}
                         onChange={e => setColumnLimit(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                    />
+                </div>
+                <div>
+                    <label htmlFor="page-number-input">Page Number:</label>
+                    <input 
+                        type="number" 
+                        className="page-number-input" 
+                        name="page-number-input" 
+                        min="1" 
+                        placeholder={`1-100`}
+                        value={pageNumber ?? ''}
+                        onChange={e => setPageNumber(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                    />
+                </div>
+                <div>
+                    <label htmlFor="limit-row-input">Number of Rows:</label>
+                    <input 
+                        type="number" 
+                        className="limit-row-input" 
+                        name="limit-row-input"
+                        min="1" 
+                        max="100"
+                        placeholder={`1-100`}
+                        value={rowLimit ?? ''}
+                        onChange={e => setRowLimit(e.target.value === '' ? null : parseInt(e.target.value, 10))}
                     />
                 </div>
                 <div>
