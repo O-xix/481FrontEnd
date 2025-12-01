@@ -13,7 +13,7 @@ function Navbar(){
                         <Link to="/">Home</Link>
                     </li>
                     <li>
-                        <Link to="/map">HeatMap</Link>
+                        <Link to="/map">Heat Map</Link>
                     </li>
                     <li>
                         <Link to="/about">About Us</Link>
