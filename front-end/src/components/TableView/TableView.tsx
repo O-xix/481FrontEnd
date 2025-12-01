@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import apiClient from '../../../axios';
 import './TableView.css';
+import DeltaTableView from './DeltaTableView';
 
 // Define a type for our data items for better type-checking
 type DataItem = { [key: string]: any };
@@ -167,118 +168,121 @@ function TableView() {
     // The check will be moved to where the table is rendered.
 
     return (
-        <div className="table-view-container">
-            <div className="button-container">
-                <div>
-                    <button className="show-all-btn" onClick={() => { setFilterValue(''); setShowSummary(false); }}>Show All</button>
-                </div>
-                <div>
-                    <label htmlFor="filter-column-names">Filter:</label>
-                    <select name="column-names" className="filter-column-names" value={filterColumn} onChange={e => setFilterColumn(e.target.value)}>
-                        {headers.map(h => <option key={h} value={h}>{h}</option>)}
-                    </select>
-                    <input type="text" placeholder="Value" className="value-input" value={filterValue} onChange={e => setFilterValue(e.target.value)}></input>
-                </div>
-                <div>
-                    <label htmlFor="sort-by-column-names">Sort By:</label>
-                    <select name="column-names" className="sort-by-column-names" value={sortColumn} onChange={e => setSortColumn(e.target.value)}>
-                        {headers.map(h => <option key={h} value={h}>{h}</option>)}
-                    </select>
-                    <select className="sort-direction" name="sort-direction" value={sortDirection} onChange={e => setSortDirection(e.target.value as 'asc' | 'desc')}>
-                        <option value="asc">Ascending</option>
-                        <option value="desc">Descending</option>
-                    </select>
-                </div>
-                <div>
-                    <label htmlFor="limit-column-input">Limit Viewable Columns:</label>
-                    <input 
-                        type="number" 
-                        className="limit-column-input" 
-                        name="limit-column-input" 
-                        min="0" 
-                        max={headers.length}
-                        placeholder={`0-${headers.length}`}
-                        onChange={e => setColumnLimit(e.target.value === '' ? null : parseInt(e.target.value, 10))}
-                    />
-                </div>
-                <div>
-                    <label htmlFor="page-number-input">Page Number:</label>
-                    <input 
-                        type="number" 
-                        className="page-number-input" 
-                        name="page-number-input" 
-                        min="1" 
-                        placeholder={`1-100`}
-                        value={pageNumberInput ?? ''}
-                        onChange={e => setPageNumberInput(e.target.value === '' ? null : parseInt(e.target.value, 10))}
-                    />
-                </div>
-                <div>
-                    <label htmlFor="limit-row-input">Number of Rows:</label>
-                    <input 
-                        type="number" 
-                        className="limit-row-input" 
-                        name="limit-row-input"
-                        min="1" 
-                        max="100"
-                        placeholder={`1-100`}
-                        value={rowLimitInput ?? ''}
-                        onChange={e => setRowLimitInput(e.target.value === '' ? null : parseInt(e.target.value, 10))}
-                    />
-                </div>
-                <button className="get-data-btn" onClick={handleGetDataClick}>
-                    Get Data
-                </button>
-                <div>
-                    <button className="summary-btn" onClick={() => setShowSummary(!showSummary)}>
-                        {showSummary ? 'Hide Summary' : 'Show Summary'}
+        <>
+            <div className="table-view-container">
+                <div className="button-container">
+                    <div>
+                        <button className="show-all-btn" onClick={() => { setFilterValue(''); setShowSummary(false); }}>Show All</button>
+                    </div>
+                    <div>
+                        <label htmlFor="filter-column-names">Filter:</label>
+                        <select name="column-names" className="filter-column-names" value={filterColumn} onChange={e => setFilterColumn(e.target.value)}>
+                            {headers.map(h => <option key={h} value={h}>{h}</option>)}
+                        </select>
+                        <input type="text" placeholder="Value" className="value-input" value={filterValue} onChange={e => setFilterValue(e.target.value)}></input>
+                    </div>
+                    <div>
+                        <label htmlFor="sort-by-column-names">Sort By:</label>
+                        <select name="column-names" className="sort-by-column-names" value={sortColumn} onChange={e => setSortColumn(e.target.value)}>
+                            {headers.map(h => <option key={h} value={h}>{h}</option>)}
+                        </select>
+                        <select className="sort-direction" name="sort-direction" value={sortDirection} onChange={e => setSortDirection(e.target.value as 'asc' | 'desc')}>
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label htmlFor="limit-column-input">Limit Viewable Columns:</label>
+                        <input 
+                            type="number" 
+                            className="limit-column-input" 
+                            name="limit-column-input" 
+                            min="0" 
+                            max={headers.length}
+                            placeholder={`0-${headers.length}`}
+                            onChange={e => setColumnLimit(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="page-number-input">Page Number:</label>
+                        <input 
+                            type="number" 
+                            className="page-number-input" 
+                            name="page-number-input" 
+                            min="1" 
+                            placeholder={`1-100`}
+                            value={pageNumberInput ?? ''}
+                            onChange={e => setPageNumberInput(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="limit-row-input">Number of Rows:</label>
+                        <input 
+                            type="number" 
+                            className="limit-row-input" 
+                            name="limit-row-input"
+                            min="1" 
+                            max="100"
+                            placeholder={`1-100`}
+                            value={rowLimitInput ?? ''}
+                            onChange={e => setRowLimitInput(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                        />
+                    </div>
+                    <button className="get-data-btn" onClick={handleGetDataClick}>
+                        Get Data
                     </button>
+                    <div>
+                        <button className="summary-btn" onClick={() => setShowSummary(!showSummary)}>
+                            {showSummary ? 'Hide Summary' : 'Show Summary'}
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            {allData.length === 0 ? (
-                <div className="data-view">No data available to display.</div>
-            ) : (
-                <div className="data-view">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                {displayedHeaders.map(header => (
-                                    <th key={header} className={(sortColumn === header || filterColumn === header) ? 'highlighted-column' : ''}>
-                                        {header}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {showSummary && summaryData ? (
+                {allData.length === 0 ? (
+                    <div className="data-view">No data available to display.</div>
+                ) : (
+                    <div className="data-view">
+                        <table className="data-table">
+                            <thead>
                                 <tr>
                                     {displayedHeaders.map(header => (
-                                        <td key={header}>{summaryData[header]}</td>
+                                        <th key={header} className={(sortColumn === header || filterColumn === header) ? 'highlighted-column' : ''}>
+                                            {header}
+                                        </th>
                                     ))}
                                 </tr>
-                            ) : (
-                                processedData.length > 0 ? (
-                                    processedData.map((item, index) => (
-                                        <tr key={item.ID ?? index}>
-                                            {displayedHeaders.map(header => (
-                                                <td key={header} className={getCellClassNames(header, item[header])}>
-                                                    {String(item[header] ?? '')}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                ) : (
+                            </thead>
+                            <tbody>
+                                {showSummary && summaryData ? (
                                     <tr>
-                                        <td colSpan={displayedHeaders.length}>No data matches your criteria.</td>
+                                        {displayedHeaders.map(header => (
+                                            <td key={header}>{summaryData[header]}</td>
+                                        ))}
                                     </tr>
-                                )
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-        </div>
+                                ) : (
+                                    processedData.length > 0 ? (
+                                        processedData.map((item, index) => (
+                                            <tr key={item.ID ?? index}>
+                                                {displayedHeaders.map(header => (
+                                                    <td key={header} className={getCellClassNames(header, item[header])}>
+                                                        {String(item[header] ?? '')}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={displayedHeaders.length}>No data matches your criteria.</td>
+                                        </tr>
+                                    )
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+            <DeltaTableView />
+        </>
     );
 }
 
