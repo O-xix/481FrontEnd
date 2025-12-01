@@ -8,6 +8,7 @@ import Navbar from '../components/Navbar/Navbar';
 import Popup from '../components/Popup/Popup';
 import apiClient, { isAxiosError } from '../../axios.ts';
 import 'leaflet/dist/leaflet.css'
+import './StateMap.css';
 
 type StateAccidentData = { [abbreviation: string]: number };
 type CountyAccidentData = { [fips: string]: number };
@@ -254,19 +255,66 @@ function StateMap() {
               key={selectedState.abbr} // Re-render when the selected state changes
             />
           )}
-          {selectedState && (
-            <button
-              onClick={() => {
-                setSelectedState(null);
-                setCountyGeoData(null);
-                setCountyAccidentData(null);
-              }}
-              style={{ position: 'absolute', top: '100px', left: '10px', zIndex: 1000, padding: '8px', cursor: 'pointer', background: 'white', border: '2px solid rgba(0,0,0,0.2)', borderRadius: '4px' }}
-            >
-              Back to US Map
-            </button>
-          )}
         </MapContainer>
+        {/* Sidebar */}
+        <aside className={`sidebar ${selectedState ? 'open' : ''}`}>
+          {selectedState && (
+            <div className="sidebar-content">
+              <button 
+                className="back-button"
+                onClick={() => {
+                  setSelectedState(null);
+                  setCountyGeoData(null);
+                  setCountyAccidentData(null);
+                }}
+              >
+                ← Back to US Map
+              </button>
+              <h2>{selectedState.name}</h2>
+              <div className="state-info">
+                <div className="info-row">
+                  <span className="info-label">State Code:</span>
+                  <span className="info-value">{selectedState.abbr}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Accident Count:</span>
+                  <span className="info-value">{accidentData[selectedState.abbr]?.toLocaleString() || 0}</span>
+                </div>
+                {countyAccidentData && (
+                  <div className="info-row">
+                    <span className="info-label">Total County Accidents:</span>
+                    <span className="info-value">{Object.values(countyAccidentData).reduce((a, b) => a + b, 0).toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="info-section">
+                  <h3>County Breakdown</h3>
+                  {isLoadingCounties ? (
+                    <p>Loading county data...</p>
+                  ) : countyAccidentData ? (
+                    <div className="county-list">
+                      {Object.entries(countyAccidentData)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 10)
+                        .map(([fips, count]) => (
+                          <div key={fips} className="county-item">
+                            <span>{fips}</span>
+                            <span className="county-count">{count.toLocaleString()}</span>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <p>No county data available</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {!selectedState && (
+            <div className="sidebar-content">
+              <p className="sidebar-placeholder">Select a state to view details</p>
+            </div>
+          )}
+        </aside>
         <div id="legend-container">
           <div id="legend-title-container">
             <h3 id="legend-title">Legend</h3>
