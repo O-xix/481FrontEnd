@@ -6,11 +6,12 @@
 .map-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 8vh);
   width: 100%;
   position: relative;
   justify-content: center;
   align-items: center;
+  margin-top: 8vh;
 }
 
 .map-container h1 {
