@@ -25,6 +25,8 @@ function StateMap() {
   const [countyGeoData, setCountyGeoData] = useState<any>(null);
   const [countyAccidentData, setCountyAccidentData] = useState<CountyAccidentData | null>(null);
   const [isLoadingCounties, setIsLoadingCounties] = useState(false);
+  const [percentageAdjustment, setPercentageAdjustment] = useState(0);
+  const [modifiedAccidentData, setModifiedAccidentData] = useState<StateAccidentData>(sampleData);
   
   // Center on USA
   const defaultPosition: [number, number] = [39.8283, -98.5795];
@@ -64,15 +66,21 @@ function StateMap() {
         for (const item of apiData) {
           if (item && item.State) processedData[item.State] = Number(item.AccidentCount) || 0;
         }
-        if (Object.keys(processedData).length > 0) setAccidentData(processedData);
+        if (Object.keys(processedData).length > 0) {
+          setAccidentData(processedData);
+          setModifiedAccidentData(processedData);
+        }
       } catch (error) {
         if (isAxiosError(error)) {
           if (error.name !== 'CanceledError') {
             console.error('Error fetching state data, falling back to sample data:', error.message);
             setAccidentData(sampleData);
+            setModifiedAccidentData(sampleData);
           }
         } else {
           console.error('Error fetching state data, falling back to sample data:', error);
+          setAccidentData(sampleData);
+          setModifiedAccidentData(sampleData);
         }
       }
     };
@@ -96,6 +104,36 @@ function StateMap() {
   };
 
   /**
+   * Calculates the adjusted accident count based on the percentage adjustment.
+   * @returns {number} - Adjusted accident count for the selected state.
+   */
+  const getAdjustedAccidentCount = () => {
+    if (!selectedState) return 0;
+    const baseCount = accidentData[selectedState.abbr] || 0;
+    return Math.round(baseCount * (1 + percentageAdjustment / 100));
+  };
+
+  /**
+   * Applies the percentage adjustment to the selected state's accident data.
+   */
+  const applyAdjustment = () => {
+    if (!selectedState) return;
+    const adjustedData = { ...modifiedAccidentData };
+    adjustedData[selectedState.abbr] = getAdjustedAccidentCount();
+    setModifiedAccidentData(adjustedData);
+  };
+
+  /**
+   * Gets the heatmap color for the selected state based on its altered accident count.
+   * @returns {string} - Hex color code for the selected state.
+   */
+  const getStateColor = () => {
+    if (!selectedState) return '#FFEDA0';
+    const value = modifiedAccidentData[selectedState.abbr] || 0;
+    return getColor(value);
+  };
+
+  /**
    * Styles the feature based on the corresponding data's value with {@link getColor}.
    * @param {any} feature - The feature to be styled.
    * @returns {object} - Styling data for the feature.
@@ -103,7 +141,7 @@ function StateMap() {
   function style(feature: any){
     const stateName = feature.properties.name;
     const stateAbbr = stateNameToAbbreviation[stateName];
-    const value = (accidentData && accidentData[stateAbbr]) || 0;
+    const value = (modifiedAccidentData && modifiedAccidentData[stateAbbr]) || 0;
     
     return {
       fillColor: getColor(value),
@@ -156,6 +194,7 @@ function StateMap() {
       const map = e.target._map;
       map.fitBounds(e.target.getBounds());
       setSelectedState({ name: stateName, abbr: stateAbbr, fips: feature.id });
+      setPercentageAdjustment(0);
     };
 
     layer.on({
@@ -270,22 +309,63 @@ function StateMap() {
               >
                 ← Back to US Map
               </button>
-              <h2>{selectedState.name}</h2>
+              <div className="sidebar-header" style={{ backgroundColor: getStateColor() }}>
+                <h2>{selectedState.name}</h2>
+              </div>
               <div className="state-info">
                 <div className="info-row">
                   <span className="info-label">State Code:</span>
                   <span className="info-value">{selectedState.abbr}</span>
                 </div>
                 <div className="info-row">
-                  <span className="info-label">Accident Count:</span>
+                  <span className="info-label">Base Accident Count:</span>
                   <span className="info-value">{accidentData[selectedState.abbr]?.toLocaleString() || 0}</span>
                 </div>
-                {countyAccidentData && (
-                  <div className="info-row">
-                    <span className="info-label">Total County Accidents:</span>
-                    <span className="info-value">{Object.values(countyAccidentData).reduce((a, b) => a + b, 0).toLocaleString()}</span>
+                <div className="info-row">
+                  <span className="info-label">Altered Accident Count:</span>
+                  <span className="info-value">{modifiedAccidentData[selectedState.abbr]?.toLocaleString() || 0}</span>
+                </div>
+                <div className="adjustment-section">
+                  <h3>Adjust Crashes</h3>
+                  <div className="adjustment-controls">
+                    <input
+                      type="range"
+                      min="-100"
+                      max="100"
+                      value={percentageAdjustment}
+                      onChange={(e) => setPercentageAdjustment(Number(e.target.value))}
+                      className="adjustment-slider"
+                    />
+                    <button 
+                      className="set-button"
+                      onClick={applyAdjustment}
+                    >
+                      Set
+                    </button>
                   </div>
-                )}
+                  <div className="adjustment-display">
+                    <div className="adjustment-value">
+                      <span>{percentageAdjustment > 0 ? '+' : ''}{percentageAdjustment}%</span>
+                    </div>
+                    <div className="adjustment-result">
+                      <span className="result-label">Adjusted Count:</span>
+                      <span className="result-value">{getAdjustedAccidentCount().toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <button 
+                    className="reset-button"
+                    onClick={() => {
+                      setPercentageAdjustment(0);
+                      setModifiedAccidentData({ ...modifiedAccidentData, [selectedState!.abbr]: accidentData[selectedState!.abbr] || 0 });
+                    }}
+                  >
+                    Reset to Original
+                  </button>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Total County Accidents:</span>
+                  <span className="info-value">{countyAccidentData ? Object.values(countyAccidentData).reduce((a, b) => a + b, 0).toLocaleString() : 'Loading...'}</span>
+                </div>
                 <div className="info-section">
                   <h3>County Breakdown</h3>
                   {isLoadingCounties ? (
