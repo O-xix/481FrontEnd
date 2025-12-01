@@ -51,7 +51,17 @@ function TableView() {
 
                 // Ensure data is an array and not empty before proceeding.
                 if (Array.isArray(data) && data.length > 0) {
-                    const dataHeaders = Object.keys(data[0]);
+                    let dataHeaders = Object.keys(data[0]);
+
+                    // --- MODIFICATION START ---
+                    // If an 'ID' column exists, move it to the front of the array.
+                    const idIndex = dataHeaders.indexOf('ID');
+                    if (idIndex > 0) { // Only run if 'ID' exists and is not already the first item
+                        const idHeader = dataHeaders.splice(idIndex, 1)[0];
+                        dataHeaders.unshift(idHeader);
+                    }
+                    // --- MODIFICATION END ---
+
                     setAllData(data);
                     setHeaders(dataHeaders);
 
