@@ -6,9 +6,11 @@ import sampleData from '../assets/sampleData';
 import { stateNameToAbbreviation } from '../assets/stateNames';
 import Navbar from '../components/Navbar/Navbar';
 import Popup from '../components/Popup/Popup';
+import apiClient, { isAxiosError } from '../../axios.ts';
 import 'leaflet/dist/leaflet.css'
 
 type StateAccidentData = { [abbreviation: string]: number };
+type CountyAccidentData = { [fips: string]: number };
 
 function StateMap() {
     // --- Data Constants --- //
@@ -16,6 +18,12 @@ function StateMap() {
   const [geoData, setGeoData] = useState<any>(null);
   //const [accidentData, setAccidentData] = useState<StateAccidentData>(sampleData);
   const [accidentData, setAccidentData] = useState<StateAccidentData>(sampleData);
+
+  // New state for county view
+  const [selectedState, setSelectedState] = useState<{ name: string, abbr: string, fips: string } | null>(null);
+  const [countyGeoData, setCountyGeoData] = useState<any>(null);
+  const [countyAccidentData, setCountyAccidentData] = useState<CountyAccidentData | null>(null);
+  const [isLoadingCounties, setIsLoadingCounties] = useState(false);
   
   // Center on USA
   const defaultPosition: [number, number] = [39.8283, -98.5795];
@@ -45,29 +53,30 @@ function StateMap() {
 
   // Fetch accident data by state from backend
   // @TODO: Replace with real backend endpoint
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
+  useEffect(() => {    
+    const controller = new AbortController();
+    const fetchAccidentData = async () => {
       try {
-        const res = await fetch('/accidents/count_by_state', { cache: 'no-store' });
-        if (!res.ok) {
-          const text = await res.text();
-          console.warn('Backend /accidents/count_by_state returned', res.status, text);
-          if (!cancelled) setAccidentData(sampleData); // fallback to bundled sample data
-          return;
-        }
-        const apiData = await res.json() as Array<{ State: string, AccidentCount: number }>;
+        const response = await apiClient.get<Array<{ State: string, AccidentCount: number }>>('/accidents/count_by_state', { signal: controller.signal });
+        const apiData = response.data;
         const processedData: StateAccidentData = {};
         for (const item of apiData) {
           if (item && item.State) processedData[item.State] = Number(item.AccidentCount) || 0;
         }
-        if (!cancelled && Object.keys(processedData).length > 0) setAccidentData(processedData);
+        if (Object.keys(processedData).length > 0) setAccidentData(processedData);
       } catch (error) {
-        console.error('Error fetching state data:', error);
-        if (!cancelled) setAccidentData(sampleData);
+        if (isAxiosError(error)) {
+          if (error.name !== 'CanceledError') {
+            console.error('Error fetching state data, falling back to sample data:', error.message);
+            setAccidentData(sampleData);
+          }
+        } else {
+          console.error('Error fetching state data, falling back to sample data:', error);
+        }
       }
-    })();
-    return () => { cancelled = true; };
+    };
+    fetchAccidentData();
+    return () => { controller.abort(); };
   }, []);
 
   // --- Helper and Handler Functions --- //
@@ -142,11 +151,76 @@ function StateMap() {
     const popupContent = renderToString(<Popup stateName={stateName} value={value}/>);
     layer.bindPopup(popupContent);
     
+    const zoomToFeature = (e: L.LeafletMouseEvent) => {
+      const map = e.target._map;
+      map.fitBounds(e.target.getBounds());
+      setSelectedState({ name: stateName, abbr: stateAbbr, fips: feature.id });
+    };
+
     layer.on({
       mouseover: highlightFeature,
-      mouseout: resetHighlight
+      mouseout: resetHighlight,
+      click: zoomToFeature
     });
   };
+
+  // --- County-Level Functions --- //
+  useEffect(() => {
+    if (!selectedState) return;
+
+    const fetchCountyData = async () => {
+      setIsLoadingCounties(true);
+      setCountyGeoData(null);
+      setCountyAccidentData(null);
+      try {
+        // 1. Fetch County GeoJSON for the selected state
+        // Assumes you have placed the split files in /public/geojson/states/
+        const geoJsonResponse = await fetch(`/states/${selectedState.fips}.json`);
+        const geoJsonData = await geoJsonResponse.json();
+        setCountyGeoData(geoJsonData);
+
+        // 2. Fetch County Accident Data from your backend
+        const accidentResponse = await apiClient.get<Array<{ FIPS: string, AccidentCount: number }>>(`/accidents/count_by_county?state_fips=${selectedState.fips}`);
+        const apiData = accidentResponse.data;
+        const processedData: CountyAccidentData = {};
+        for (const item of apiData) {
+          if (item && item.FIPS) processedData[item.FIPS] = Number(item.AccidentCount) || 0;
+        }
+        setCountyAccidentData(processedData);
+
+      } catch (error) {
+        console.error(`Error fetching county data for ${selectedState.name}:`, error);
+        // Optionally, handle the error, e.g., by showing a notification
+      } finally {
+        setIsLoadingCounties(false);
+      }
+    };
+
+    fetchCountyData();
+  }, [selectedState]);
+
+  // Style function for counties
+  function styleCounty(feature: any) {
+    const fips = feature.properties.STATE + feature.properties.COUNTY;
+    const value = (countyAccidentData && countyAccidentData[fips]) || 0;
+    return {
+      fillColor: getColor(value), // We can reuse the state color logic
+      weight: 1,
+      opacity: 1,
+      color: 'white',
+      fillOpacity: 0.7
+    };
+  }
+
+  // Popup/hover handlers for counties
+  function onEachCountyFeature(feature: any, layer: L.Layer) {
+    const countyName = feature.properties.NAME;
+    const fips = feature.properties.STATE + feature.properties.COUNTY;
+    const value = (countyAccidentData && countyAccidentData[fips]) || 0;
+    const popupContent = renderToString(<Popup stateName={`${countyName} County`} value={value} />);
+    layer.bindPopup(popupContent);
+    // You can add highlight/reset functions for counties here as well
+  }
 
   return (
     <>
@@ -162,13 +236,35 @@ function StateMap() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {geoData && accidentData && (
+          {/* If no state is selected, show the state map */}
+          {!selectedState && geoData && accidentData && (
             <GeoJSON 
               data={geoData} 
               style={style}
               onEachFeature={onEachFeature}
               key={JSON.stringify(accidentData)}
             />
+          )}
+          {/* If a state IS selected, show the county map */}
+          {selectedState && !isLoadingCounties && countyGeoData && countyAccidentData && (
+            <GeoJSON
+              data={countyGeoData}
+              style={styleCounty}
+              onEachFeature={onEachCountyFeature}
+              key={selectedState.abbr} // Re-render when the selected state changes
+            />
+          )}
+          {selectedState && (
+            <button
+              onClick={() => {
+                setSelectedState(null);
+                setCountyGeoData(null);
+                setCountyAccidentData(null);
+              }}
+              style={{ position: 'absolute', top: '100px', left: '10px', zIndex: 1000, padding: '8px', cursor: 'pointer', background: 'white', border: '2px solid rgba(0,0,0,0.2)', borderRadius: '4px' }}
+            >
+              Back to US Map
+            </button>
           )}
         </MapContainer>
         <div id="legend-container">

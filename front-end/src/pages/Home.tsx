@@ -12,6 +12,7 @@ function Home() {
       <section className="home-actions">
         <Link to="/map" className="btn">View HeatMap</Link>
         <Link to="/dashboard" className="btn">Open Dashboard</Link>
+        <Link to="/TableView" className="btn">Table View</Link>
         <Link to="/about" className="btn btn-secondary">About Us</Link>
       </section>
     </div>

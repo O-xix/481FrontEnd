@@ -24,6 +24,9 @@ function Navbar(){
                     <li>
                         <Link to="/dashboard">Dashboard</Link>
                     </li>
+                    <li>
+                        <Link to="/TableView">Table View</Link>
+                    </li>
                 </ul>
             </nav>
         </header>

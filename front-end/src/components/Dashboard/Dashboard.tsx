@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './Dashboard.css';
+import apiClient from '../../../axios.ts';
 
 interface StateData {
   State: string;
@@ -38,41 +39,40 @@ function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const controllerRef = useRef<AbortController | null>(null);
-  const mountedRef = useRef(true);
-
-  async function loadData() {
-    controllerRef.current?.abort();
+  useEffect(() => {
     const controller = new AbortController();
-    controllerRef.current = controller;
 
-    setIsLoading(true);
-    setError(null);
+    const fetchData = async () => {
+      try {
+        // Set loading state at the beginning of the fetch
+        setIsLoading(true);
+        setError(null);
 
-    try {
-      const options = {
-        signal: controller.signal,
-        headers: {
-          'Accept': 'application/json'
+        const config = {
+          signal: controller.signal,
+        };
+
+        // Fetch all endpoints in parallel
+        const [totalRes, stateRes, yearlyRes] = await Promise.all([
+          apiClient.get<{ total: number }>('/accidents/total_records', config),
+          apiClient.get<StateData[]>('/accidents/count_by_state', config),
+          apiClient.get<YearlyStats[]>('/accidents/yearly_stats', config)
+        ]);
+
+        // Set state with the data from the responses
+        setTotalRecords(totalRes.data.total);
+        setStateData(stateRes.data);
+        setYearlyStats(yearlyRes.data);
+
+      } catch (err: any) {
+        // Ignore abort errors, which are expected on unmount
+        if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
+          console.error('Fetch error:', err);
+          setError(err instanceof Error ? err.message : 'Failed to fetch data');
         }
-      };
-
-      const [totalRes, stateRes, yearlyRes] = await Promise.all([
-        fetch('/accidents/total_records', options),
-        fetch('/accidents/count_by_state', options),
-        fetch('/accidents/yearly_stats', options)
-      ]);
-
-      if (!mountedRef.current) return;
-
-      const okFlags = {
-        total: totalRes.ok,
-        state: stateRes.ok,
-        yearly: yearlyRes.ok
-      };
-
-      if (!okFlags.total || !okFlags.state || !okFlags.yearly) {
-        throw new Error(`API Error: ${JSON.stringify(okFlags)}`);
+      } finally {
+        // This runs regardless of success or failure
+        setIsLoading(false);
       }
 
       const [totalData, stateJson, yearlyJson] = await Promise.all([
@@ -114,8 +114,7 @@ function Dashboard() {
     loadData();
 
     return () => {
-      mountedRef.current = false;
-      controllerRef.current?.abort();
+      controller.abort();
     };
   }, []);
 
