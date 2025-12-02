@@ -30,7 +30,7 @@ function DeltaTableView() {
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setCreateModalOpen] = useState<boolean>(false);
   const [isUpdateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
-  const [sessionId, setSessionId] = useState<string>('test-session-id'); // Placeholder
+  const [sessionId, setSessionId] = useState<string>('07734'); // Placeholder
 
   // --- Form State ---
   // For now, a simple example. This would be expanded for all 49 fields.
