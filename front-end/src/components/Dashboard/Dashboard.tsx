@@ -12,7 +12,6 @@ interface YearlyStats {
   count: number;
 }
 
-// Default fallback data
 const DEFAULT_TOTAL = 7728394;
 const DEFAULT_STATE_DATA: StateData[] = [
   { State: 'CA', AccidentCount: 1741433 },
@@ -39,84 +38,93 @@ function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const mountedRef = useRef(true);
+
+  const loadData = async () => {
     const controller = new AbortController();
 
-    const fetchData = async () => {
-      try {
-        // Set loading state at the beginning of the fetch
-        setIsLoading(true);
-        setError(null);
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        const config = {
-          signal: controller.signal,
-        };
+      const config = { signal: controller.signal };
 
-        // Fetch all endpoints in parallel
-        const [totalRes, stateRes, yearlyRes] = await Promise.all([
-          apiClient.get<{ total: number }>('/accidents/total_records', config),
-          apiClient.get<StateData[]>('/accidents/count_by_state', config),
-          apiClient.get<YearlyStats[]>('/accidents/yearly_stats', config)
-        ]);
-
-        // Set state with the data from the responses
-        setTotalRecords(totalRes.data.total);
-        setStateData(stateRes.data);
-        setYearlyStats(yearlyRes.data);
-
-      } catch (err: any) {
-        // Ignore abort errors, which are expected on unmount
-        if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
-          console.error('Fetch error:', err);
-          setError(err instanceof Error ? err.message : 'Failed to fetch data');
-        }
-      } finally {
-        // This runs regardless of success or failure
-        setIsLoading(false);
-      }
-
-      const [totalData, stateJson, yearlyJson] = await Promise.all([
-        totalRes.json(),
-        stateRes.json(),
-        yearlyRes.json()
+      const [totalRes, stateRes, yearlyRes] = await Promise.all([
+        apiClient.get<{ total: number }>('/accidents/total_records', config),
+        apiClient.get<StateData[]>('/accidents/count_by_state', config),
+        apiClient.get<YearlyStats[]>('/accidents/yearly_stats', config)
       ]);
 
       if (!mountedRef.current) return;
 
-      setTotalRecords(Number(totalData.total) || 0);
-      setStateData(Array.isArray(stateJson) ? stateJson : []);
-      setYearlyStats(Array.isArray(yearlyJson) ? yearlyJson : []);
-      setIsLoading(false);
-      setError(null);
+      setTotalRecords(totalRes.data.total);
+      setStateData(stateRes.data);
+      setYearlyStats(yearlyRes.data);
+
     } catch (err: any) {
-      if (err && err.name === 'AbortError') {
-        console.log('Fetch aborted (expected on unmount/retry)');
-        return;
-      }
-
-      console.error('Fetch error:', err);
-
-      if (mountedRef.current) {
+      if (err?.name !== 'CanceledError' && err?.name !== 'AbortError') {
+        console.error('Fetch error:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch data');
         setTotalRecords(DEFAULT_TOTAL);
         setStateData(DEFAULT_STATE_DATA);
         setYearlyStats(DEFAULT_YEARLY);
-        setIsLoading(false);
       }
     } finally {
-      // clear controllerRef if it's still this controller
-      if (controllerRef.current === controller) controllerRef.current = null;
+      if (mountedRef.current) setIsLoading(false);
     }
-  }
+
+    return () => controller.abort();
+  };
 
   useEffect(() => {
-    mountedRef.current = true;
-    loadData();
+  const controller = new AbortController();
+  mountedRef.current = true;
 
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const config = { signal: controller.signal };
+
+      const [totalRes, stateRes, yearlyRes] = await Promise.all([
+        apiClient.get<{ total: number }>('/accidents/total_records', config),
+        apiClient.get<StateData[]>('/accidents/count_by_state', config),
+        apiClient.get<YearlyStats[]>('/accidents/yearly_stats', config)
+      ]);
+
+      if (!mountedRef.current) return;
+
+      setTotalRecords(totalRes.data.total);
+      setStateData(stateRes.data);
+      setYearlyStats(yearlyRes.data);
+
+    } catch (err: any) {
+
+      if (err?.name === 'CanceledError' || err?.name === 'AbortError') return;
+
+      console.error('Fetch error:', err);
+      setError(err.message || 'Failed to load data');
+
+      if (mountedRef.current) {
+        setTotalRecords(DEFAULT_TOTAL);
+        setStateData(DEFAULT_STATE_DATA);
+        setYearlyStats(DEFAULT_YEARLY);
+      }
+
+    } finally {
+      if (mountedRef.current) setIsLoading(false);
+    }
+  };
+
+  loadData();
+
+  return () => {
+    mountedRef.current = false;
+    controller.abort();    // ✅ correct cleanup
+  };
+}, []);
+
 
   if (isLoading) {
     return (
@@ -128,12 +136,11 @@ function Dashboard() {
 
   return (
     <div className="dashboard-container">
-      {/* non-blocking error banner: user sees dashboard and error message */}
       {error && (
         <div className="error-message" role="alert" style={{ marginBottom: '1rem' }}>
           <div>Error loading dashboard: {error}</div>
           <div style={{ marginTop: '0.5rem' }}>
-            <button onClick={() => loadData()} style={{ marginRight: 8 }}>Retry</button>
+            <button onClick={loadData} style={{ marginRight: 8 }}>Retry</button>
           </div>
         </div>
       )}
@@ -146,39 +153,31 @@ function Dashboard() {
         <div className="stat-card">
           <h2>Total Records</h2>
           <div className="stat-value">
-            {totalRecords ? totalRecords.toLocaleString() : 'No data'}
+            {totalRecords.toLocaleString()}
           </div>
         </div>
 
         <div className="stat-card">
           <h2>Top 5 States by Accidents</h2>
           <div className="stat-list">
-            {stateData.length > 0 ? (
-              stateData.slice(0, 5).map((state) => (
-                <div key={state.State} className="stat-item">
-                  <span>{state.State}</span>
-                  <span>{state.AccidentCount.toLocaleString()}</span>
-                </div>
-              ))
-            ) : (
-              <div className="no-data">No state data available</div>
-            )}
+            {stateData.slice(0, 5).map((state) => (
+              <div key={state.State} className="stat-item">
+                <span>{state.State}</span>
+                <span>{state.AccidentCount.toLocaleString()}</span>
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="stat-card">
           <h2>Yearly Distribution</h2>
           <div className="stat-list">
-            {yearlyStats.length > 0 ? (
-              yearlyStats.map((stat) => (
-                <div key={stat.year} className="stat-item">
-                  <span>{stat.year}</span>
-                  <span>{stat.count.toLocaleString()}</span>
-                </div>
-              ))
-            ) : (
-              <div className="no-data">No yearly data available</div>
-            )}
+            {yearlyStats.map((stat) => (
+              <div key={stat.year} className="stat-item">
+                <span>{stat.year}</span>
+                <span>{stat.count.toLocaleString()}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
