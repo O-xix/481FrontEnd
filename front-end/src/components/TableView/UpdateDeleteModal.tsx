@@ -1,113 +1,51 @@
-import React, { useState, useEffect } from 'react';
 import React, { useState } from 'react';
 import { Modal, handleUpdateExistingRecord, handleDeleteExistingRecord } from './UserModification';
 import './UpdateDeleteModal.css';
 
-// Define a type for the incoming row data to ensure type safety
-type RowData = {
-  ID: string;
-  Severity: number;
-  Description: string;
-  Weather_Condition: string;
-  [key: string]: any; // Allow other properties
-};
+// List of columns the user is allowed to edit.
+const editableColumns = [
+  "Severity", "Description", "Weather_Condition", "Street", "City", "State", "Zipcode", "Temperature(F)", "Wind_Speed(mph)", "Visibility(mi)"
+];
 
 type UpdateDeleteModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  rowData: RowData | null;
   currentSessionId: string;
   onActionComplete: () => void; // Callback to refresh data in the parent
 };
 
-export const UpdateDeleteModal: React.FC<UpdateDeleteModalProps> = ({ isOpen, onClose, rowData, currentSessionId, onActionComplete }) => {
 export const UpdateDeleteModal: React.FC<UpdateDeleteModalProps> = ({ isOpen, onClose, currentSessionId, onActionComplete }) => {
   // State for the user-inputted Master ID
   const [masterId, setMasterId] = useState<string>('');
+  const [selectedColumn, setSelectedColumn] = useState<string>(editableColumns[0]);
+  const [newValue, setNewValue] = useState<string>('');
 
-  // State to hold the new values from the form inputs
-  const [formState, setFormState] = useState({
-    Severity: rowData?.Severity || 0,
-    Description: rowData?.Description || '',
-    Weather_Condition: rowData?.Weather_Condition || '',
-    Severity: '',
-    Description: '',
-    Weather_Condition: '',
-  });
-
-  // Effect to reset form state when a new row is passed in
-  useEffect(() => {
-    if (rowData) {
-      setFormState({
-        Severity: rowData.Severity,
-        Description: rowData.Description,
-        Weather_Condition: rowData.Weather_Condition,
-      });
-    }
-  }, [rowData]);
   if (!isOpen) return null;
 
-  if (!isOpen || !rowData) return null;
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormState(prevState => ({
-      ...prevState,
-      [name]: name === 'Severity' ? parseInt(value, 10) : value,
-      [name]: value,
-    }));
-  };
-
   /**
-   * Checks which fields have changed and sends a separate delta record for each modification.
+   * Submits a single update delta record for the selected column.
    */
   const handleUpdateSubmit = async () => {
     if (!masterId) {
       alert("Please enter a Master Record ID.");
       return;
     }
-
-    const changes: Promise<any>[] = [];
-    const masterId = rowData.ID;
-
-    // Compare each field in the form state with the original rowData
-    if (formState.Severity !== rowData.Severity) {
-      changes.push(handleUpdateExistingRecord(masterId, 'Severity', formState.Severity, currentSessionId));
-    // For each field, if it has a value, create an update record.
-    if (formState.Severity) {
-      changes.push(handleUpdateExistingRecord(masterId, 'Severity', parseInt(formState.Severity, 10), currentSessionId));
-    }
-    if (formState.Description !== rowData.Description) {
-    if (formState.Description) {
-      changes.push(handleUpdateExistingRecord(masterId, 'Description', formState.Description, currentSessionId));
-    }
-    if (formState.Weather_Condition !== rowData.Weather_Condition) {
-    if (formState.Weather_Condition) {
-      changes.push(handleUpdateExistingRecord(masterId, 'Weather_Condition', formState.Weather_Condition, currentSessionId));
-    }
-
-    if (changes.length === 0) {
-      alert("No changes were made.");
-      alert("No new values were entered to update.");
+    if (!newValue) {
+      alert("Please enter a new value for the selected column.");
       return;
     }
 
     try {
-      await Promise.all(changes);
-      alert(`Successfully submitted ${changes.length} update(s).`);
-      onActionComplete(); // Trigger data refresh in parent
-      onClose(); // Close the modal
+      // The value is sent as a string, Supabase/Postgres will handle casting if the column type is numeric.
+      await handleUpdateExistingRecord(masterId, selectedColumn, newValue, currentSessionId);
+      alert(`Successfully submitted update for ${selectedColumn}.`);
       handleClose();
     } catch (error) {
       alert("Failed to submit updates. Check console for details.");
     }
   };
 
-  /**
-   * Sends a single delta record to mark the master record for deletion.
-   */
   const handleDeleteSubmit = async () => {
-    if (window.confirm(`Are you sure you want to delete record ${rowData.ID}? This action cannot be undone.`)) {
     if (!masterId) {
       alert("Please enter a Master Record ID to delete.");
       return;
@@ -115,12 +53,8 @@ export const UpdateDeleteModal: React.FC<UpdateDeleteModalProps> = ({ isOpen, on
 
     if (window.confirm(`Are you sure you want to delete record ${masterId}? This action cannot be undone.`)) {
       try {
-        await handleDeleteExistingRecord(rowData.ID, currentSessionId);
-        alert(`Record ${rowData.ID} has been marked for deletion.`);
         await handleDeleteExistingRecord(masterId, currentSessionId);
         alert(`Record ${masterId} has been marked for deletion.`);
-        onActionComplete(); // Trigger data refresh in parent
-        onClose(); // Close the modal
         handleClose();
       } catch (error) {
         alert("Failed to delete record. Check console for details.");
@@ -128,55 +62,35 @@ export const UpdateDeleteModal: React.FC<UpdateDeleteModalProps> = ({ isOpen, on
     }
   };
 
-  // Resets state and closes the modal
   const handleClose = () => {
     setMasterId('');
-    setFormState({ Severity: '', Description: '', Weather_Condition: '' });
-    onClose();
+    setSelectedColumn(editableColumns[0]);
+    setNewValue('');
+    onActionComplete(); // Refresh parent data
+    onClose(); // This is the original onClose from props to hide the modal
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <h2>Edit Record: {rowData.ID}</h2>
     <Modal isOpen={isOpen} onClose={handleClose}>
       <h2>Edit or Delete an Existing Record</h2>
       <div className="update-form">
-        {/* Master ID Field */}
         <div className="form-field">
           <label>Master Record ID (e.g., "A-1", "A-2")</label>
           <input type="text" placeholder="Enter ID of the record to modify" value={masterId} onChange={(e) => setMasterId(e.target.value)} className="master-id-input" />
         </div>
 
-        <p className="form-instructions">Enter the new value for any field you wish to update. Leave fields blank to keep their original values.</p>
+        <p className="form-instructions">Select a column and enter the new value you wish to submit.</p>
 
-        {/* Severity Field */}
         <div className="form-field">
-          <label>Severity</label>
-          <div className="value-comparison">
-            <p className="original-value">Original: {rowData.Severity}</p>
-            <input type="number" name="Severity" value={formState.Severity} onChange={handleInputChange} />
-          </div>
-          <input type="number" name="Severity" placeholder="Enter new severity (e.g., 1-4)" value={formState.Severity} onChange={handleInputChange} />
+          <label>Column to Update</label>
+          <select value={selectedColumn} onChange={(e) => setSelectedColumn(e.target.value)}>
+            {editableColumns.map(col => <option key={col} value={col}>{col}</option>)}
+          </select>
         </div>
 
-        {/* Description Field */}
         <div className="form-field">
-          <label>Description</label>
-          <div className="value-comparison">
-            <p className="original-value">Original: {rowData.Description}</p>
-            <textarea name="Description" value={formState.Description} onChange={handleInputChange} rows={4}></textarea>
-          </div>
-          <textarea name="Description" placeholder="Enter new description" value={formState.Description} onChange={handleInputChange} rows={3}></textarea>
-        </div>
-
-        {/* Weather Condition Field */}
-        <div className="form-field">
-          <label>Weather Condition</label>
-          <div className="value-comparison">
-            <p className="original-value">Original: {rowData.Weather_Condition}</p>
-            <input type="text" name="Weather_Condition" value={formState.Weather_Condition} onChange={handleInputChange} />
-          </div>
-          <input type="text" name="Weather_Condition" placeholder="Enter new weather condition" value={formState.Weather_Condition} onChange={handleInputChange} />
+          <label>New Value for "{selectedColumn}"</label>
+          <input type="text" placeholder="Enter the new value" value={newValue} onChange={(e) => setNewValue(e.target.value)} />
         </div>
       </div>
       <div className="modal-actions">

@@ -254,7 +254,6 @@ function DeltaTableView() {
       <UpdateDeleteModal
         isOpen={isUpdateModalOpen}
         onClose={() => setUpdateModalOpen(false)}
-        rowData={null} // This prop is no longer used and can be removed
         currentSessionId={sessionId}
         onActionComplete={fetchAllData}
       />
