@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'
 import { useState, useEffect, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import L from 'leaflet';
-import sampleData from '../assets/sampleData';
+import {sampleData, populationMap} from '../assets/sampleData';
 import { stateNameToAbbreviation } from '../assets/stateNames';
 import Navbar from '../components/Navbar/Navbar';
 import Popup from '../components/Popup/Popup';
@@ -286,8 +286,7 @@ function StateMap() {
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          {/* If no state is selected, show the state map */}
+          />``
           {!selectedState && geoData && accidentData && (
             <GeoJSON 
               data={geoData} 
@@ -296,17 +295,15 @@ function StateMap() {
               key={JSON.stringify(accidentData)}
             />
           )}
-          {/* If a state IS selected, show the county map */}
           {selectedState && !isLoadingCounties && countyGeoData && countyAccidentData && (
             <GeoJSON
               data={countyGeoData}
               style={styleCounty}
               onEachFeature={onEachCountyFeature}
-              key={selectedState.abbr} // Re-render when the selected state changes
+              key={selectedState.abbr}
             />
           )}
         </MapContainer>
-        {/* Sidebar */}
         <aside className={`sidebar ${selectedState ? 'open' : ''}`} style={{ borderLeftColor: selectedState ? getStateColor() : 'transparent' }}>
           {selectedState && (
             <div className="sidebar-content">
@@ -317,6 +314,8 @@ function StateMap() {
                     setSelectedState(null);
                     setCountyGeoData(null);
                     setCountyAccidentData(null);
+
+                    mapRef.current?.setView(defaultPosition, defaultZoom);
                   }}
                   title="Back to US Map"
                 >
@@ -331,7 +330,7 @@ function StateMap() {
                       map.fitBounds((layer as any).getBounds());
                     }
                   }}
-                  title="Refocus on state"
+                  title="Recenter on state"
                 >
                   Recenter
                 </button>
@@ -345,16 +344,31 @@ function StateMap() {
                   <span className="info-value">{selectedState.abbr}</span>
                 </div>
                 <div className="info-row">
-                  <span className="info-label">Base Accident Count:</span>
+                  <span className="info-label">Population:</span>
+                  <span className="info-value">{populationMap[selectedState.abbr]?.toLocaleString() || 0}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Accident Count:</span>
                   <span className="info-value">{accidentData[selectedState.abbr]?.toLocaleString() || 0}</span>
                 </div>
                 <div className="info-row">
-                  <span className="info-label">Altered Accident Count:</span>
-                  <span className="info-value">{modifiedAccidentData[selectedState.abbr]?.toLocaleString() || 0}</span>
+                  <span className="info-label">Accident Per Person:</span>
+                  <span className="info-value">{(accidentData[selectedState.abbr] / populationMap[selectedState.abbr])?.toLocaleString() || 0}</span>
                 </div>
                 <div className="info-section">
                   <h3>Adjust Crashes</h3>
+                  <div className="info-row">
+                    <span className="info-label">Altered Accident Count:</span>
+                    <span className="info-value">{modifiedAccidentData[selectedState.abbr]?.toLocaleString() || 0}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">Altered Accident Per Person:</span>
+                    <span className="info-value">{(modifiedAccidentData[selectedState.abbr] / populationMap[selectedState.abbr])?.toLocaleString() || 0}</span>
+                  </div>
                   <div className="adjustment-controls">
+                    <div className="adjustment-value">
+                      <span>{percentageAdjustment > 0 ? '+' : ''}{percentageAdjustment}%</span>
+                    </div>
                     <input
                       type="range"
                       min="-100"
@@ -371,9 +385,6 @@ function StateMap() {
                     </button>
                   </div>
                   <div className="adjustment-display">
-                    <div className="adjustment-value">
-                      <span>{percentageAdjustment > 0 ? '+' : ''}{percentageAdjustment}%</span>
-                    </div>
                     <div className="adjustment-result">
                       <span className="result-label">Adjusted Count:</span>
                       <span className="result-value">{getAdjustedAccidentCount().toLocaleString()}</span>
@@ -416,15 +427,19 @@ function StateMap() {
               </div>
             </div>
           )}
-          {!selectedState && (
-            <div className="sidebar-content">
-              <p className="sidebar-placeholder">Select a state to view details</p>
-            </div>
-          )}
         </aside>
-        <div id="legend-container">
-          <div id="legend-title-container">
-            <h3 id="legend-title">Legend</h3>
+        <button 
+          className="us-recenter-button"
+          onClick={() => {
+            mapRef.current?.setView(defaultPosition, defaultZoom);
+          }}
+          title="Recenter on USA"
+        >
+          Recenter
+        </button>
+        <div className="legend-container">
+          <div className="legend-title-container">
+            <h3 className="legend-title">Legend</h3>
           </div>
           {colors.map(({threshold, color}) => {
             return (

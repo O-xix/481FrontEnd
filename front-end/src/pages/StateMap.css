@@ -9,7 +9,7 @@
 
 .sidebar {
   position: fixed;
-  left: -350px;
+  left: calc(-370px);
   top: 8vh;
   width: 350px;
   height: calc(100vh - 8vh);
@@ -36,7 +36,6 @@
   display: flex;
   gap: 8px;
   justify-content: space-between;
-  margin-bottom: 12px;
 }
 
 .sidebar button{
@@ -125,6 +124,9 @@
 
 .info-section {
   margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .info-section h3 {
@@ -196,7 +198,7 @@
 }
 
 .result-value {
-  color: #007bff;
+  color: #ef933d;
   font-weight: 700;
 }
 
@@ -237,8 +239,68 @@
 }
 
 .county-count {
-  color: #007bff;
+  color: #ef933d;
   font-weight: 700;
+}
+
+.us-recenter-button {
+  position: absolute;
+  z-index: 1000;
+  top: 1.25rem;
+  right: 4.5rem;
+  padding: 0.5rem;
+  font-size: 1rem;
+  background-color: white;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.us-recenter-button:hover {
+  background-color: #f4f4f4;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.us-recenter-button:active {
+  background-color: #ececec;
+}
+
+.legend-container {
+  position: absolute;
+  z-index: 1000;
+  bottom: 2rem;
+  right: 2rem;
+  background-color: white;
+  width: 10%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 1rem;
+  text-align: center;
+}
+
+.legend-title-container {
+  background-color: #FFE5B4;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.color-swatch {
+  width: 25%;
+}
+
+.legend-threshold{
+  flex: 1;
+  text-align: center;
+  color: black;
 }
 
 @media (max-width: 768px) {
