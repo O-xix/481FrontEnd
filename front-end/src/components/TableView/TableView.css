@@ -53,6 +53,23 @@ thead th {
     top: 0;
 }
 
+.tooltip-icon {
+    display: inline-block;
+    margin-left: 8px;
+    background-color: #a0c3e0;
+    color: #0056b3;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    text-align: center;
+    line-height: 16px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: help;
+    vertical-align: middle; /* Aligns the icon nicely with the header text */
+    transition: background-color 0.2s ease;
+}
+
 tbody td {
     padding: 10px 15px;
     border-bottom: 1px solid #ddd; /* Light separator lines */

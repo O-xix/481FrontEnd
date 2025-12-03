@@ -10,7 +10,7 @@ function Home() {
       </header>
 
       <section className="home-actions">
-        <Link to="/map" className="btn">View HeatMap</Link>
+        <Link to="/map" className="btn">View Heatmap</Link>
         <Link to="/simulation" className="btn">View Simulation</Link>
         <Link to="/dashboard" className="btn">Open Dashboard</Link>
         <Link to="/TableView" className="btn">Table View</Link>
