@@ -55,21 +55,21 @@ const BarChart: React.FC<BarChartProps> = ({
       .attr('height', height);
 
     const x = d3.scaleBand()
-      .domain(data.map(d => d.year.toString())) // x-axis for years
+      .domain(data.map((d: YearlyStats) => d.year.toString())) // x-axis for years
       .range([marginLeft, width - marginRight])
       .padding(0.1);
 
     const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.count)!]).nice() // y-axis for counts
+      .domain([0, d3.max(data, (d: YearlyStats) => d.count)!]).nice() // y-axis for counts
       .range([height - marginBottom, marginTop]);
 
     // Draw bars
     svg.append('g')
       .attr('fill', 'steelblue')
       .selectAll('rect')
-      .data(data)
+      .data<YearlyStats>(data)
       .join('rect')
-      .attr('x', d => x(d.year.toString())!)
+      .attr('x', (d: YearlyStats) => x(d.year.toString())!)
       .attr('y', d => y(d.count))
       .attr('height', d => y(0) - y(d.count))
       .attr('width', x.bandwidth());
@@ -82,7 +82,7 @@ const BarChart: React.FC<BarChartProps> = ({
     // Add y-axis
     svg.append('g')
       .attr('transform', `translate(${marginLeft},0)`)
-      .call(d3.axisLeft(y).tickFormat(d3.format(".2s"))) // Format large numbers
+      .call(d3.axisLeft(y).tickFormat(d3.format('.2s') as (d: d3.NumberValue, i: number) => string)) // Format large numbers
       .call(g => g.select('.domain').remove()) // Remove y-axis line
       .call(g => g.append('text')
         .attr('x', -marginLeft)
@@ -92,7 +92,7 @@ const BarChart: React.FC<BarChartProps> = ({
         .text('↑ Accident Count'));
 
     // Add tooltips (simple title attribute for now)
-    svg.selectAll('rect')
+    svg.selectAll<SVGRectElement, YearlyStats>('rect')
       .append('title')
       .text(d => `Year: ${d.year}\nAccidents: ${d.count.toLocaleString()}`);
 
