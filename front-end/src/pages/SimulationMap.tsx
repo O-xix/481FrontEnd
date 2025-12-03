@@ -2,7 +2,6 @@ import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import L from 'leaflet';
-import Navbar from '../components/Navbar/Navbar';
 import 'leaflet/dist/leaflet.css';
 import './SimulationMap.css';
 import { stateNameToAbbreviation } from '../assets/stateNames';
@@ -353,8 +352,6 @@ function SimulationMap() {
 
   return (
     <>
-      <Navbar />
-
       <main className="map-container">
         <div className="simulation-controls">
           <span className="current-month-display">{isLoading ? 'Loading...' : currentMonthDisplay}</span>
