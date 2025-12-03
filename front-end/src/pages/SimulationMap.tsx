@@ -2,7 +2,6 @@ import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import L from 'leaflet';
-import Navbar from '../components/Navbar/Navbar';
 import 'leaflet/dist/leaflet.css';
 import './SimulationMap.css';
 import { stateNameToAbbreviation } from '../assets/stateNames';
