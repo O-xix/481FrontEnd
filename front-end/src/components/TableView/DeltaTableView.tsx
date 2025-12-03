@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { supabase } from './supabaseClient'; // Adjust path if needed
 import './DeltaTableView.css';
 import { Modal, handleCreateNewRecord } from './UserModification';
@@ -30,7 +30,7 @@ function DeltaTableView() {
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setCreateModalOpen] = useState<boolean>(false);
   const [isUpdateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
-  const [sessionId, setSessionId] = useState<string>('07734'); // Placeholder
+  const [sessionId] = useState<string>('07734'); // Placeholder
 
   // --- Form State ---
   // For now, a simple example. This would be expanded for all 49 fields.
