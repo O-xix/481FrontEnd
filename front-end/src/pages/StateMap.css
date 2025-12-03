@@ -62,10 +62,9 @@
 }
 
 .back-button {
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0 !important;
-  font-size: 24px;
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1.5rem;
   font-weight: bold;
 }
 
@@ -227,10 +226,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px;
-  background: #f0f8ff;
+  background: #f9f9f9;
   border-radius: 3px;
   font-size: 12px;
-  border-left: 3px solid #ef933d;
 }
 
 .county-item span:first-child {
@@ -301,6 +299,44 @@
   flex: 1;
   text-align: center;
   color: black;
+}
+
+.loading-popup {
+  position: absolute;
+  z-index: 1000;
+  left: 51%;
+  bottom: 3rem;
+  background-color: #f9f9f9;
+  padding: 0.1rem 0.75rem;
+  border-radius: 0.75rem;
+  border: solid 1px #b2b9be;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.loading-popup p {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.loading-spinner {
+  width: 1.5rem;
+  aspect-ratio: 1/1;
+  border: solid 3px #ef933d;
+  border-top: solid 3px transparent;
+  border-radius: 100%;
+  animation: 1s infinite linear spin;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0);
+  }
+
+  100% {
+    transform: rotate(1);
+  }
 }
 
 @media (max-width: 768px) {
