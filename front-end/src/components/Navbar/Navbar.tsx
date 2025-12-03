@@ -13,7 +13,7 @@ function Navbar(){
                         <Link to="/">Home</Link>
                     </li>
                     <li>
-                        <Link to="/map">Total HeatMap</Link>
+                        <Link to="/map">Total Heatmap</Link>
                     </li>
                     <li>
                         <Link to="/simulation">Simulation</Link>
