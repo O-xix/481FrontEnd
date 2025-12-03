@@ -1,33 +1,37 @@
-import { MapContainer, TileLayer, GeoJSON} from 'react-leaflet'
-import { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'
+import { useState, useEffect, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import L from 'leaflet';
-import sampleData from '../assets/sampleData';
+import {sampleData, populationMap} from '../assets/sampleData';
 import { stateNameToAbbreviation } from '../assets/stateNames';
-import Navbar from '../components/Navbar/Navbar';
 import Popup from '../components/Popup/Popup';
 import apiClient, { isAxiosError } from '../../axios.ts';
 import 'leaflet/dist/leaflet.css'
+import './StateMap.css';
 
 type StateAccidentData = { [abbreviation: string]: number };
 type CountyAccidentData = { [fips: string]: number };
 
 function StateMap() {
     // --- Data Constants --- //
-  // GeoJSON that contains data for the shape of each state.
   const [geoData, setGeoData] = useState<any>(null);
-  //const [accidentData, setAccidentData] = useState<StateAccidentData>(sampleData);
   const [accidentData, setAccidentData] = useState<StateAccidentData>(sampleData);
 
-  // New state for county view
   const [selectedState, setSelectedState] = useState<{ name: string, abbr: string, fips: string } | null>(null);
   const [countyGeoData, setCountyGeoData] = useState<any>(null);
   const [countyAccidentData, setCountyAccidentData] = useState<CountyAccidentData | null>(null);
   const [isLoadingCounties, setIsLoadingCounties] = useState(false);
+  const [percentageAdjustment, setPercentageAdjustment] = useState(0);
+  const [modifiedAccidentData, setModifiedAccidentData] = useState<StateAccidentData>(sampleData);
   
   // Center on USA
   const defaultPosition: [number, number] = [39.8283, -98.5795];
   const defaultZoom = 4;
+
+  // Ref to store GeoJSON layers by state abbreviation
+  const stateLayersRef = useRef<Map<string, L.Layer>>(new Map());
+  // Ref to store the map instance
+  const mapRef = useRef<L.Map | null>(null);
 
   // Color scale with thresholds
   const colors: { threshold: number; color: string }[] = [
@@ -52,7 +56,6 @@ function StateMap() {
   }, []);
 
   // Fetch accident data by state from backend
-  // @TODO: Replace with real backend endpoint
   useEffect(() => {    
     const controller = new AbortController();
     const fetchAccidentData = async () => {
@@ -63,15 +66,21 @@ function StateMap() {
         for (const item of apiData) {
           if (item && item.State) processedData[item.State] = Number(item.AccidentCount) || 0;
         }
-        if (Object.keys(processedData).length > 0) setAccidentData(processedData);
+        if (Object.keys(processedData).length > 0) {
+          setAccidentData(processedData);
+          setModifiedAccidentData(processedData);
+        }
       } catch (error) {
         if (isAxiosError(error)) {
           if (error.name !== 'CanceledError') {
             console.error('Error fetching state data, falling back to sample data:', error.message);
             setAccidentData(sampleData);
+            setModifiedAccidentData(sampleData);
           }
         } else {
           console.error('Error fetching state data, falling back to sample data:', error);
+          setAccidentData(sampleData);
+          setModifiedAccidentData(sampleData);
         }
       }
     };
@@ -95,6 +104,36 @@ function StateMap() {
   };
 
   /**
+   * Calculates the adjusted accident count based on the percentage adjustment.
+   * @returns {number} - Adjusted accident count for the selected state.
+   */
+  const getAdjustedAccidentCount = () => {
+    if (!selectedState) return 0;
+    const baseCount = accidentData[selectedState.abbr] || 0;
+    return Math.round(baseCount * (1 + percentageAdjustment / 100));
+  };
+
+  /**
+   * Applies the percentage adjustment to the selected state's accident data.
+   */
+  const applyAdjustment = () => {
+    if (!selectedState) return;
+    const adjustedData = { ...modifiedAccidentData };
+    adjustedData[selectedState.abbr] = getAdjustedAccidentCount();
+    setModifiedAccidentData(adjustedData);
+  };
+
+  /**
+   * Gets the heatmap color for the selected state based on its altered accident count.
+   * @returns {string} - Hex color code for the selected state.
+   */
+  const getStateColor = () => {
+    if (!selectedState) return '#FFEDA0';
+    const value = modifiedAccidentData[selectedState.abbr] || 0;
+    return getColor(value);
+  };
+
+  /**
    * Styles the feature based on the corresponding data's value with {@link getColor}.
    * @param {any} feature - The feature to be styled.
    * @returns {object} - Styling data for the feature.
@@ -102,7 +141,7 @@ function StateMap() {
   function style(feature: any){
     const stateName = feature.properties.name;
     const stateAbbr = stateNameToAbbreviation[stateName];
-    const value = (accidentData && accidentData[stateAbbr]) || 0;
+    const value = (modifiedAccidentData && modifiedAccidentData[stateAbbr]) || 0;
     
     return {
       fillColor: getColor(value),
@@ -148,6 +187,9 @@ function StateMap() {
     const stateAbbr = stateNameToAbbreviation[stateName];
     const value = (accidentData && accidentData[stateAbbr]) || 0;
     
+    // Store layer reference for refocus button
+    stateLayersRef.current.set(stateAbbr, layer);
+    
     const popupContent = renderToString(<Popup stateName={stateName} value={value}/>);
     layer.bindPopup(popupContent);
     
@@ -155,6 +197,7 @@ function StateMap() {
       const map = e.target._map;
       map.fitBounds(e.target.getBounds());
       setSelectedState({ name: stateName, abbr: stateAbbr, fips: feature.id });
+      setPercentageAdjustment(0);
     };
 
     layer.on({
@@ -219,24 +262,30 @@ function StateMap() {
     const value = (countyAccidentData && countyAccidentData[fips]) || 0;
     const popupContent = renderToString(<Popup stateName={`${countyName} County`} value={value} />);
     layer.bindPopup(popupContent);
-    // You can add highlight/reset functions for counties here as well
+  }
+
+  // Component to capture the map instance
+  function MapCapturer() {
+    const map = useMap();
+    mapRef.current = map;
+    return null;
   }
 
   return (
     <>
-        <Navbar/>
       <main className="map-container">
         <MapContainer 
           center={defaultPosition} 
           zoom={defaultZoom} 
           scrollWheelZoom={true}
           className="leaflet-map"
+          zoomControl={true}
         >
+          <MapCapturer />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          {/* If no state is selected, show the state map */}
+          />``
           {!selectedState && geoData && accidentData && (
             <GeoJSON 
               data={geoData} 
@@ -245,31 +294,151 @@ function StateMap() {
               key={JSON.stringify(accidentData)}
             />
           )}
-          {/* If a state IS selected, show the county map */}
           {selectedState && !isLoadingCounties && countyGeoData && countyAccidentData && (
             <GeoJSON
               data={countyGeoData}
               style={styleCounty}
               onEachFeature={onEachCountyFeature}
-              key={selectedState.abbr} // Re-render when the selected state changes
+              key={selectedState.abbr}
             />
           )}
-          {selectedState && (
-            <button
-              onClick={() => {
-                setSelectedState(null);
-                setCountyGeoData(null);
-                setCountyAccidentData(null);
-              }}
-              style={{ position: 'absolute', top: '100px', left: '10px', zIndex: 1000, padding: '8px', cursor: 'pointer', background: 'white', border: '2px solid rgba(0,0,0,0.2)', borderRadius: '4px' }}
-            >
-              Back to US Map
-            </button>
-          )}
         </MapContainer>
-        <div id="legend-container">
-          <div id="legend-title-container">
-            <h3 id="legend-title">Legend</h3>
+        <aside className={`sidebar ${selectedState ? 'open' : ''}`} style={{ borderLeftColor: selectedState ? getStateColor() : 'transparent' }}>
+          {selectedState && (
+            <div className="sidebar-content">
+              <div className="sidebar-buttons">
+                <button 
+                  className="back-button orange-button"
+                  onClick={() => {
+                    setSelectedState(null);
+                    setCountyGeoData(null);
+                    setCountyAccidentData(null);
+
+                    mapRef.current?.setView(defaultPosition, defaultZoom);
+                  }}
+                  title="Back to US Map"
+                >
+                  ✕
+                </button>
+                <button 
+                  className="refocus-button gray-button"
+                  onClick={() => {
+                    const layer = stateLayersRef.current.get(selectedState.abbr);
+                    const map = mapRef.current;
+                    if (layer && map && 'getBounds' in layer) {
+                      map.fitBounds((layer as any).getBounds());
+                    }
+                  }}
+                  title="Recenter on state"
+                >
+                  Recenter
+                </button>
+              </div>
+              <div className="sidebar-header">
+                <h2>{selectedState.name}</h2>
+              </div>
+              <div className="state-info">
+                <div className="info-row">
+                  <span className="info-label">State Code:</span>
+                  <span className="info-value">{selectedState.abbr}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Population:</span>
+                  <span className="info-value">{populationMap[selectedState.abbr]?.toLocaleString() || 0}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Accident Count:</span>
+                  <span className="info-value">{accidentData[selectedState.abbr]?.toLocaleString() || 0}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Accident Per Person:</span>
+                  <span className="info-value">{(accidentData[selectedState.abbr] / populationMap[selectedState.abbr])?.toLocaleString() || 0}</span>
+                </div>
+                <div className="info-section">
+                  <h3>Adjust Crashes</h3>
+                  <div className="info-row">
+                    <span className="info-label">Altered Accident Count:</span>
+                    <span className="info-value">{modifiedAccidentData[selectedState.abbr]?.toLocaleString() || 0}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">Altered Accident Per Person:</span>
+                    <span className="info-value">{(modifiedAccidentData[selectedState.abbr] / populationMap[selectedState.abbr])?.toLocaleString() || 0}</span>
+                  </div>
+                  <div className="adjustment-controls">
+                    <div className="adjustment-value">
+                      <span>{percentageAdjustment > 0 ? '+' : ''}{percentageAdjustment}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-100"
+                      max="100"
+                      value={percentageAdjustment}
+                      onChange={(e) => setPercentageAdjustment(Number(e.target.value))}
+                      className="adjustment-slider"
+                    />
+                    <button 
+                      className="set-button orange-button"
+                      onClick={applyAdjustment}
+                    >
+                      Set
+                    </button>
+                  </div>
+                  <div className="adjustment-display">
+                    <div className="adjustment-result">
+                      <span className="result-label">Adjusted Count:</span>
+                      <span className="result-value">{getAdjustedAccidentCount().toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <button 
+                    className="reset-button gray-button"
+                    onClick={() => {
+                      setPercentageAdjustment(0);
+                      setModifiedAccidentData({ ...modifiedAccidentData, [selectedState!.abbr]: accidentData[selectedState!.abbr] || 0 });
+                    }}
+                  >
+                    Reset to Original
+                  </button>
+                </div>
+                <div className="info-section">
+                  <h3>County Data</h3>
+                  <div className="info-row">
+                    <span className="info-label">Total County Accidents:</span>
+                    <span className="info-value">{countyAccidentData ? Object.values(countyAccidentData).reduce((a, b) => a + b, 0).toLocaleString() : 'Loading...'}</span>
+                  </div>
+                  {isLoadingCounties ? (
+                    <p>Loading county data...</p>
+                  ) : countyAccidentData ? (
+                    <div className="county-list">
+                      {Object.entries(countyAccidentData)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 10)
+                        .map(([fips, count]) => (
+                          <div key={fips} className="county-item">
+                            <span>{fips}</span>
+                            <span className="county-count">{count.toLocaleString()}</span>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <p>No county data available</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </aside>
+        <button 
+          className="us-recenter-button"
+          onClick={() => {
+            mapRef.current?.setView(defaultPosition, defaultZoom);
+          }}
+          title="Recenter on USA"
+        >
+          Recenter
+        </button>
+        <div className="legend-container">
+          <div className="legend-title-container">
+            <h3 className="legend-title">Legend</h3>
           </div>
           {colors.map(({threshold, color}) => {
             return (
