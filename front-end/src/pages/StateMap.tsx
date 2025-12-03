@@ -207,6 +207,8 @@ function StateMap() {
     });
   };
 
+  console.log(countyAccidentData);
+
   // --- County-Level Functions --- //
   useEffect(() => {
     if (!selectedState) return;
@@ -313,12 +315,13 @@ function StateMap() {
                     setSelectedState(null);
                     setCountyGeoData(null);
                     setCountyAccidentData(null);
+                    setIsLoadingCounties(false);
 
                     mapRef.current?.setView(defaultPosition, defaultZoom);
                   }}
                   title="Back to US Map"
                 >
-                  ✕
+                  Back
                 </button>
                 <button 
                   className="refocus-button gray-button"
@@ -449,6 +452,13 @@ function StateMap() {
             );
            })}
         </div>
+        {isLoadingCounties && (
+            <div className='loading-popup'>
+              <p>Loading County Data...</p>
+              <div className='loading-spinner'></div>
+            </div>
+          )
+        }  
       </main>
     </>
   )
