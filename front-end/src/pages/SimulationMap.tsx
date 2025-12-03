@@ -2,11 +2,11 @@ import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import L from 'leaflet';
-import Navbar from '../components/Navbar/Navbar';
 import 'leaflet/dist/leaflet.css';
 import './SimulationMap.css';
 import { stateNameToAbbreviation } from '../assets/stateNames';
 import Popup from '../components/Popup/Popup';
+import apiClient, { isAxiosError } from '../../axios';
 
 type StateAccidentData = { [abbreviation: string]: number };
 // Map to store processed data: { "YYYY-MM": { "StateAbbr": count, ... }, ... }
@@ -120,20 +120,21 @@ function SimulationMap() {
 
   // --- Fetch Monthly Data from backend ---
   useEffect(() => {
-    let mounted = true;
+    const controller = new AbortController();
     const fetchMonthly = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch('/accidents/monthly_count_by_state', { cache: 'no-store' });
-        if (!mounted) return;
-        if (!res.ok) throw new Error(`Backend error: ${res.status}`);
-        const json = await res.json();
-        if (!json || !json.data || !Array.isArray(json.data)) {
-            console.error("Invalid monthly data response:", json);
-            setIsLoading(false);
-            return;
-        }
+        const response = await apiClient.get<{
+          max_count: number;
+          data: Array<{ YearMonth: string; State: string; Count: number }>;
+        }>('/accidents/monthly_count_by_state', { signal: controller.signal });
 
+        const json = response.data;
+        if (!json || !json.data || !Array.isArray(json.data)) {
+          console.error('Invalid monthly data response:', json);
+          return;
+        }
+        
         const { max_count, data } = json;
 
 
@@ -157,21 +158,24 @@ function SimulationMap() {
           return +da - +db;
         });
 
-        if (!mounted) return;
         setMonthlyData(processedData);
         setSortedMonths(sortedMonthsArray);
         setMaxMonthlyCount(Number(max_count) || 0);
         setCurrentIndex(0);
-      } catch (err) {
-        console.error('Error fetching monthly state data:', err);
+      } catch (error) {
+        if (isAxiosError(error)) {
+          if (error.name !== 'CanceledError') {
+            console.error('Error fetching monthly state data:', error.message);
+          }
+        } else {
+          console.error('An unexpected error occurred:', error);
+        }
       } finally {
-        if (mounted) setIsLoading(false);
+        setIsLoading(false);
       }
     };
     fetchMonthly();
-    return () => {
-      mounted = false;
-    };
+    return () => { controller.abort(); };
   }, []);
 
   // --- Color scale with thresholds (matching StateMap style) ---
@@ -348,8 +352,6 @@ function SimulationMap() {
 
   return (
     <>
-      <Navbar />
-
       <main className="map-container">
         <div className="simulation-controls">
           <span className="current-month-display">{isLoading ? 'Loading...' : currentMonthDisplay}</span>
