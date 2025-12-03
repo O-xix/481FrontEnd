@@ -353,8 +353,6 @@ function SimulationMap() {
 
   return (
     <>
-      <Navbar />
-
       <main className="map-container">
         <div className="simulation-controls">
           <span className="current-month-display">{isLoading ? 'Loading...' : currentMonthDisplay}</span>
