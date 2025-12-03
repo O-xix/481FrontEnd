@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import apiClient from '../../../axios';
 import './TableView.css';
+import { columnDescriptions } from '../../assets/columnDescriptions';
 import DeltaTableView from './DeltaTableView';
 
 // Define a type for our data items for better type-checking
@@ -256,7 +257,11 @@ function TableView() {
                             <thead>
                                 <tr>
                                     {displayedHeaders.map(header => (
-                                        <th key={header} className={(sortColumn === header || filterColumn === header) ? 'highlighted-column' : ''}>
+                                        <th 
+                                            key={header} 
+                                            className={(sortColumn === header || filterColumn === header) ? 'highlighted-column' : ''}
+                                            title={columnDescriptions[header] || `No description available for ${header}.`}
+                                        >
                                             {header}
                                         </th>
                                     ))}
