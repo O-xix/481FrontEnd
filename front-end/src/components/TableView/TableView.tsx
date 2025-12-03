@@ -260,9 +260,14 @@ function TableView() {
                                         <th 
                                             key={header} 
                                             className={(sortColumn === header || filterColumn === header) ? 'highlighted-column' : ''}
-                                            title={columnDescriptions[header] || `No description available for ${header}.`}
                                         >
                                             {header}
+                                            <span 
+                                                className="tooltip-icon" 
+                                                title={columnDescriptions[header] || `No description available for ${header}.`}
+                                            >
+                                                ?
+                                            </span>
                                         </th>
                                     ))}
                                 </tr>
