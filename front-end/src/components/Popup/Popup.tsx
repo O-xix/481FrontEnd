@@ -1,6 +1,6 @@
 import './Popup.css';
 
-let PopulationMap = new Map<string, number>();
+const PopulationMap = new Map<string, number>();
 PopulationMap.set('California', 39431263);
 
 PopulationMap.set('Texas', 31290831);
@@ -59,17 +59,17 @@ PopulationMap.set('Wyoming', 587618);
  * @param {string} stateName - The name of the state being clicked on.
  */
 function Popup({stateName, value}: {stateName: string, value: number}){
-  let Pop = PopulationMap.get(stateName);
-  let popDensity = 0;
-  if (Pop) {
-    //Crashes / population
-    popDensity = (value / Pop);
-  }
+  // let Pop = PopulationMap.get(stateName);
+  // let popDensity = 0;
+  // if (Pop) {
+  //   //Crashes / population
+  //   // popDensity = (value / Pop);
+  // }
   
     return (<div id = "popup-container" style={{ padding: '8px' }}>
         <h3 id="popup-title">{stateName}</h3>
         <p id="crashses-amount">Crashes: {value.toLocaleString()}</p>
-        <p id="pop-density">Crashes Per Person: {popDensity.toFixed(4)}</p>
+        {/* <p id="pop-density">Crashes Per Person: {popDensity.toFixed(4)}</p> */}
       </div>
     );
 }

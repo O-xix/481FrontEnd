@@ -419,7 +419,7 @@ function StateMap() {
                         .slice(0, 10)
                         .map(([fips, count]) => (
                           <div key={fips} className="county-item">
-                            <span>{fipsToCountyNameMap[fips] || fips}</span>
+                            <span>{fipsToCountyNameMap[fips] ? `${fipsToCountyNameMap[fips]} County` : fips}</span>
                             <span className="county-count">{count.toLocaleString()}</span>
                           </div>
                         ))}

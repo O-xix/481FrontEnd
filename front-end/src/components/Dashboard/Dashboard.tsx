@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import './Dashboard.css';
 import apiClient from '../../../axios.ts';
+import BarChart from './BarChart.tsx'; // Import the new BarChart component
 
 interface StateData {
   State: string;
@@ -180,6 +181,15 @@ function Dashboard() {
             ))}
           </div>
         </div>
+
+        
+        </div>
+
+        <div className="chart-card">
+          <h2>Yearly Accident Distribution</h2>
+          <div className="chart-wrapper">
+            <BarChart data={yearlyStats} />
+          </div>
       </div>
     </div>
   );
