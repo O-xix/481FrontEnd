@@ -4,7 +4,6 @@ import { renderToString } from 'react-dom/server';
 import L from 'leaflet';
 import {sampleData, populationMap} from '../assets/sampleData';
 import { stateNameToAbbreviation } from '../assets/stateNames';
-import Navbar from '../components/Navbar/Navbar';
 import Popup from '../components/Popup/Popup';
 import apiClient, { isAxiosError } from '../../axios.ts';
 import 'leaflet/dist/leaflet.css'
