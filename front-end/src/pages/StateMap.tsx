@@ -319,22 +319,9 @@ function StateMap() {
 
                     mapRef.current?.setView(defaultPosition, defaultZoom);
                   }}
-                  title="Back to US Map"
+                  title="Return to State view"
                 >
-                  Back
-                </button>
-                <button 
-                  className="refocus-button gray-button"
-                  onClick={() => {
-                    const layer = stateLayersRef.current.get(selectedState.abbr);
-                    const map = mapRef.current;
-                    if (layer && map && 'getBounds' in layer) {
-                      map.fitBounds((layer as any).getBounds());
-                    }
-                  }}
-                  title="Recenter on state"
-                >
-                  Recenter
+                  Return to State View
                 </button>
               </div>
               <div className="sidebar-header">
@@ -433,7 +420,16 @@ function StateMap() {
         <button 
           className="us-recenter-button"
           onClick={() => {
-            mapRef.current?.setView(defaultPosition, defaultZoom);
+            if (selectedState) {
+              const layer = stateLayersRef.current.get(selectedState.abbr);
+              const map = mapRef.current;
+              if (layer && map && 'getBounds' in layer) {
+                map.fitBounds((layer as any).getBounds());
+              }
+            }
+            else {
+              mapRef.current?.setView(defaultPosition, defaultZoom);
+            }
           }}
           title="Recenter on USA"
         >
