@@ -1,0 +1,72 @@
+.update-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 15px;
+  }
+  
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .form-field label {
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .update-form input,
+  .update-form textarea {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+  }
+  
+  .delete-btn {
+    background-color: #d9534f;
+    color: white;
+  }
+  
+  .update-btn {
+    background-color: #5cb85c;
+    color: white;
+  }
+
+  .master-id-input {
+    font-weight: bold;
+    background-color: #f0f8ff; /* A light blue to make it stand out */
+  }
+
+  .form-instructions {
+    font-size: 0.9rem;
+    color: #666;
+    background-color: #f9f9f9;
+    border-left: 3px solid #5cb85c;
+    padding: 10px;
+    margin: 10px 0;
+  }
+
+
+  .master-id-input {
+    font-weight: bold;
+    background-color: #f0f8ff; /* A light blue to make it stand out */
+  }
+
+  .form-instructions {
+    font-size: 0.9rem;
+    color: #666;
+    background-color: #f9f9f9;
+    border-left: 3px solid #5cb85c;
+    padding: 10px;
+    margin: 10px 0;
+  }
