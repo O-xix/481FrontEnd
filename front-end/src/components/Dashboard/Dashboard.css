@@ -59,12 +59,26 @@
   border-bottom: none;
 }
 
-.chart-container {
+/* New class for the full-width chart card */
+.chart-card {
   background: white;
   border-radius: 10px;
   padding: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 1.5rem; /* Match the grid gap */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chart-card h2 {
+  color: #ef933d;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #FFE5B4;
+  padding-bottom: 0.5rem;
+}
+
+/* Wrapper to handle chart responsiveness */
+.chart-wrapper {
+  overflow-x: auto; /* Allows chart to scroll on very small screens */
 }
 
 .loading {
