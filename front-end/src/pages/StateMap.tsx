@@ -20,6 +20,7 @@ function StateMap() {
   const [selectedState, setSelectedState] = useState<{ name: string, abbr: string, fips: string } | null>(null);
   const [countyGeoData, setCountyGeoData] = useState<any>(null);
   const [countyAccidentData, setCountyAccidentData] = useState<CountyAccidentData | null>(null);
+  const [fipsToCountyNameMap, setFipsToCountyNameMap] = useState<{ [fips: string]: string }>({});
   const [isLoadingCounties, setIsLoadingCounties] = useState(false);
   const [percentageAdjustment, setPercentageAdjustment] = useState(0);
   const [modifiedAccidentData, setModifiedAccidentData] = useState<StateAccidentData>(sampleData);
@@ -215,6 +216,7 @@ function StateMap() {
       setIsLoadingCounties(true);
       setCountyGeoData(null);
       setCountyAccidentData(null);
+      setFipsToCountyNameMap({});
       try {
         // 1. Fetch County GeoJSON for the selected state
         // Assumes you have placed the split files in /public/geojson/states/
@@ -222,6 +224,18 @@ function StateMap() {
         const geoJsonData = await geoJsonResponse.json();
         setCountyGeoData(geoJsonData);
 
+        // Create a FIPS -> County Name mapping from the GeoJSON properties
+        const newFipsToNameMap: { [fips: string]: string } = {};
+        if (geoJsonData && geoJsonData.features) {
+          for (const feature of geoJsonData.features) {
+            const props = feature.properties;
+            if (props && props.NAME && props.STATE && props.COUNTY) {
+              const fips = props.STATE + props.COUNTY;
+              newFipsToNameMap[fips] = props.NAME;
+            }
+          }
+        }
+        setFipsToCountyNameMap(newFipsToNameMap);
         // 2. Fetch County Accident Data from your backend
         const accidentResponse = await apiClient.get<Array<{ FIPS: string, AccidentCount: number }>>(`/accidents/count_by_county?state_fips=${selectedState.fips}`);
         const apiData = accidentResponse.data;
@@ -313,6 +327,7 @@ function StateMap() {
                     setSelectedState(null);
                     setCountyGeoData(null);
                     setCountyAccidentData(null);
+                    setFipsToCountyNameMap({});
 
                     mapRef.current?.setView(defaultPosition, defaultZoom);
                   }}
@@ -414,7 +429,7 @@ function StateMap() {
                         .slice(0, 10)
                         .map(([fips, count]) => (
                           <div key={fips} className="county-item">
-                            <span>{fips}</span>
+                            <span>{fipsToCountyNameMap[fips] || fips}</span>
                             <span className="county-count">{count.toLocaleString()}</span>
                           </div>
                         ))}
