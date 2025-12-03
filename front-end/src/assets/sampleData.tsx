@@ -1,8 +1,6 @@
 
 /**
  * We currently use sample data for the number of crashes in each state.
- * 
- * @todo: Replace data with calculated amount from CSV.
  */
 const sampleData: { [key: string]: number } = {
   'AL': 101044,
@@ -57,4 +55,60 @@ const sampleData: { [key: string]: number } = {
   'WY': 3757
 };
 
-export default sampleData;
+/**
+ * The population of each state.
+ */
+const populationMap: { [key: string]: number } = {
+  'CA': 39431263,
+  'TX': 31290831,
+  'FL': 23372215,
+  'NY': 19867248,
+  'PA': 13078751,
+  'IL': 12710158,
+  'OH': 11883304,
+  'GA': 11180878,
+  'NC': 11046024,
+  'MI': 10140459,
+  'NJ': 9500851,
+  'VA': 8868896,
+  'WA': 7958180,
+  'AZ': 7582384,
+  'TN': 7227750,
+  'MA': 7136171,
+  'IN': 6924275,
+  'MD': 6263220,
+  'MO': 6245466,
+  'WI': 5960975,
+  'CO': 5957493,
+  'MN': 5793151,
+  'SC': 5478831,
+  'AL': 5157699,
+  'LA': 4597740,
+  'KY': 4588372,
+  'OR': 4272371,
+  'OK': 4095393,
+  'CT': 3675069,
+  'UT': 3503613,
+  'NV': 3267467,
+  'IA': 3241488,
+  'AR': 3088354,
+  'KS': 2970606,
+  'MS': 2943045,
+  'NM': 2130256,
+  'NE': 2005465,
+  'ID': 2001619,
+  'WV': 1712278,
+  'HI': 1446146,
+  'NH': 1409032,
+  'ME': 1405012,
+  'MT': 1137233,
+  'RI': 1112308,
+  'DE': 1051917,
+  'SD': 924669,
+  'ND': 796568,
+  'AK': 740133,
+  'VT': 648493,
+  'WY': 587618
+};
+
+export { sampleData, populationMap };

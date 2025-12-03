@@ -6,11 +6,12 @@
 .map-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 8vh);
   width: 100%;
   position: relative;
   justify-content: center;
   align-items: center;
+  margin-top: 8vh;
 }
 
 .map-container h1 {
@@ -23,38 +24,4 @@
   height: 100%;
   width: 100%;
   min-height: 400px;
-}
-
-#legend-container {
-  position: absolute;
-  z-index: 1000;
-  bottom: 2rem;
-  right: 2rem;
-  background-color: white;
-  width: 10%;
-  display: flex;
-  flex-direction: column;
-  border-radius: 1rem;
-  text-align: center;
-}
-
-#legend-title-container {
-  background-color: #FFE5B4;
-  border-top-left-radius: 1rem;
-  border-top-right-radius: 1rem;
-}
-
-.legend-item {
-  display: flex;
-  justify-content: space-between;
-}
-
-.color-swatch {
-  width: 25%;
-}
-
-.legend-threshold{
-  flex: 1;
-  text-align: center;
-  color: black;
 }
