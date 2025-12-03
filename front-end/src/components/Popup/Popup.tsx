@@ -69,7 +69,7 @@ function Popup({stateName, value}: {stateName: string, value: number}){
     return (<div id = "popup-container" style={{ padding: '8px' }}>
         <h3 id="popup-title">{stateName}</h3>
         <p id="crashses-amount">Crashes: {value.toLocaleString()}</p>
-        {/* <p id="pop-density">Crashes Per Person: {popDensity.toFixed(4)}</p> */}
+        <p id="pop-density">Crashes Per Person: {popDensity.toFixed(4)}</p>
       </div>
     );
 }
