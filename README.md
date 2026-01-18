@@ -2,7 +2,7 @@
 
 A data-visualization web app that visualizes U.S. traffic accident data (2016–2023) with interactive maps, charts, tables, and a simulation view. Built as a group project for the CSS 481 Web Development course at the University of Washington Bothell.
 
-Live demo: (not hosted) — run locally following the instructions below.
+Live demo: https://481-front-end.vercel.app/
 
 ## About
 
@@ -70,7 +70,6 @@ Steps:
    - or: yarn dev
 
 The Vite dev server will start and show a local URL (typically http://localhost:5173). Open it in your browser.
-However, there is a hosted production site at: https://481-front-end.vercel.app/
 
 ## Build & preview
 
