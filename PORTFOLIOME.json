@@ -1,0 +1,20 @@
+{
+  "title": "Car Collision Heatmap",
+  "subtitle": "Interactive U.S. traffic accident visualizer",
+  "description": "React + TypeScript frontend for visualizing the US Accidents dataset (2016–2023) with interactive maps, a monthly simulation, dashboard charts, and a tabular explorer. Built as a CSS 481 group project to surface traffic safety patterns and support data-driven exploration...",
+  "technologies": [
+    "React",
+    "TypeScript",
+    "Vite",
+    "react-router",
+    "Leaflet / react-leaflet",
+    "Axios",
+    "CSS"
+  ],
+  "category": "School",
+  "links": {
+    "github": "https://github.com/O-xix/481FrontEnd",
+    "demo": ""
+  },
+  "image": "/preview/car-collision-heatmap.png"
+}
