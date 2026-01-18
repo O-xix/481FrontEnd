@@ -4,6 +4,20 @@ A data-visualization web app that visualizes U.S. traffic accident data (2016–
 
 Live demo: https://481-front-end.vercel.app/
 
+## Table of contents
+
+- [About](#about)
+- [Features](#features)
+- [Data source](#data-source)
+- [Tech stack](#tech-stack)
+- [Repository structure](#repository-structure)
+- [Getting started (local development)](#getting-started-local-development)
+- [Environment / configuration](#environment--configuration)
+- [Build & preview](#build--preview)
+- [Contributing](#contributing)
+- [Authors](#authors)
+- [License](#license)
+
 ## About
 
 This project provides visual insights into U.S. car collision patterns using maps, heatmaps, charts, and a table view. The goal is to make accident risk and traffic patterns more accessible to travelers, planners, and anyone interested in road safety.
